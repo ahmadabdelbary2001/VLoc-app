@@ -1,0 +1,8 @@
+{
+  "extends": "@vloc/config-typescript/tsconfig.react.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
