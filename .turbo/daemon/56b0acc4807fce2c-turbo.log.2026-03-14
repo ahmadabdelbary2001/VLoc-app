@@ -15,3 +15,14 @@
 2026-03-14T02:49:27.072010Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("desktop-mobile"), path: AnchoredSystemPathBuf("apps\\desktop-mobile") }}))
 2026-03-14T02:49:29.067213Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\desktop-mobile\\vite.config.ts.timestamp-1773456568999-c8c26f20ae5878.mjs"), AnchoredSystemPathBuf("apps\\desktop-mobile"), AnchoredSystemPathBuf("apps\\desktop-mobile\\vite.config.ts")}
 2026-03-14T02:49:29.067246Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("desktop-mobile"), path: AnchoredSystemPathBuf("apps\\desktop-mobile") }}))
+2026-03-14T03:01:03.530465Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie"), AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie"), AnchoredSystemPathBuf(".turbo")}
+2026-03-14T03:01:03.530629Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-03-14T03:01:03.631766Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-03-14T03:01:04.618701Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\desktop-mobile"), AnchoredSystemPathBuf("apps\\desktop-mobile\\vite.config.ts.timestamp-1773457264527-90959992c77818.mjs")}
+2026-03-14T03:01:04.618734Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("desktop-mobile"), path: AnchoredSystemPathBuf("apps\\desktop-mobile") }}))
+2026-03-14T03:01:04.774438Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\56b0acc4807fce2c-turbo.log.2026-03-14")}
+2026-03-14T03:01:04.774470Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-03-14T03:01:06.315761Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-03-14T03:01:06.315786Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-03-14T03:01:29.714939Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\desktop-mobile\\tsconfig.node.json")}
+2026-03-14T03:01:29.715039Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("desktop-mobile"), path: AnchoredSystemPathBuf("apps\\desktop-mobile") }}))
