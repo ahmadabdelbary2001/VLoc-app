@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+target/
+
+# build outputs
+dist/
+build/
+coverage/
+.next/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Misc
+.env
+.env.local
+.DS_Store
+*.log

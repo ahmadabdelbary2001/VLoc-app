@@ -1,0 +1,11 @@
+[package]
+name = "vloc-engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ahmad <vloc@vloc.local>"]
+description = "Pure math/simulation logic for GPS"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+thiserror = "1.0"
+tracing = "0.1"

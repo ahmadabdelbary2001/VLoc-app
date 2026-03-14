@@ -1,0 +1,19 @@
+[package]
+name = "desktop-mobile"
+version = "0.1.0"
+description = "VLoc App"
+authors = ["Ahmad <vloc@vloc.local>"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-rc", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = [] }
+tauri-plugin-shell = "2.0.0-rc"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+vloc-engine = { path = "../../../crates/vloc-engine" }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
