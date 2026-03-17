@@ -23,18 +23,21 @@ function App() {
   const { map, toggleTheme } = useMap();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasCentered, setHasCentered] = useState(false);
 
   // Default values from legacy project
   const DEFAULT_CENTER = { lat: 35.0, lng: 39.0 };
   const DEFAULT_ZOOM = 6.2;
 
   // Initial Position Logic: If realLocation is available, center on it. Otherwise, use DEFAULT.
+  // We only do this ONCE (using hasCentered) to avoid snapping back repeatedly.
   useEffect(() => {
-    if (map && realLocation && !isActive && waypoints.length === 0) {
+    if (map && realLocation && !isActive && waypoints.length === 0 && !hasCentered) {
       map.panTo({ lat: realLocation.lat, lng: realLocation.lng });
       map.setZoom(15);
+      setHasCentered(true);
     }
-  }, [map, realLocation, isActive, waypoints.length]);
+  }, [map, realLocation, isActive, waypoints.length, hasCentered]);
 
   return (
     <div className="h-screen w-screen bg-zinc-950 overflow-hidden relative">
