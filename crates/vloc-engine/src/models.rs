@@ -32,13 +32,21 @@ impl Coordinates {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum EndOfRouteBehavior {
+    Stop,
+    Restart,
+    Reverse,
+}
+
 /// Defines a planned path for simulation.
 /// 
 /// **Why**: Houses the waypoint collection and loop settings required by the Simulator.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct Route {
     pub waypoints: Vec<Coordinates>,
-    pub is_loop: bool,
+    pub end_behavior: EndOfRouteBehavior,
 }
 
 /// Encapsulates the complete status of the spoofing engine at a point in time.

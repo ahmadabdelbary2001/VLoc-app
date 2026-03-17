@@ -75,7 +75,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Construct the Route object expected by Rust
     const route = {
       waypoints: waypoints.map(w => ({ lat: w.lat, lng: w.lng, altitude: null })),
-      is_loop: settings.loopMode !== "None",
+      end_behavior: settings.loopMode || "stop",
     };
 
     try {

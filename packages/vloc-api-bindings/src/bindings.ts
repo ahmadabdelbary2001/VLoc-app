@@ -7,12 +7,15 @@
  * We use f64 for high-precision GPS coordinate storage.
  */
 export type Coordinates = { lat: number; lng: number; altitude: number | null }
+
+export type EndOfRouteBehavior = "stop" | "restart" | "reverse";
+
 /**
  * Defines a planned path for simulation.
  * 
  * **Why**: Houses the waypoint collection and loop settings required by the Simulator.
  */
-export type Route = { waypoints: Coordinates[]; is_loop: boolean }
+export type Route = { waypoints: Coordinates[]; end_behavior: EndOfRouteBehavior }
 /**
  * Encapsulates the complete status of the spoofing engine at a point in time.
  * 

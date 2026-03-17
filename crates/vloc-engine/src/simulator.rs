@@ -1,6 +1,6 @@
 use crate::error::{EngineError, EngineResult};
 use crate::math::{calculate_bearing, calculate_destination, haversine_distance};
-use crate::models::{Coordinates, Route, SpoofingState};
+use crate::models::{Coordinates, Route, SpoofingState, EndOfRouteBehavior};
 
 /// Main simulation engine responsible for coordinate interpolation and route management.
 pub struct Simulator {
@@ -10,6 +10,8 @@ pub struct Simulator {
     state: SpoofingState,
     /// Tracks the current segment being traversed in the route.
     current_waypoint_idx: usize,
+    /// Whether we're currently moving backwards in Reverse mode.
+    is_reversing: bool,
 }
 
 impl Simulator {
@@ -37,6 +39,7 @@ impl Simulator {
                 remaining_distance_meters: None,
             },
             current_waypoint_idx: 0,
+            is_reversing: false,
         })
     }
 
@@ -61,46 +64,64 @@ impl Simulator {
     }
 
     /// Advances the simulation by a given time delta.
-    /// 
-    /// **How**: Calculates the displacement for the time period based on current speed. 
-    /// It then traverses the route's segments, consuming the distance until the 
-    /// delta is exhausted or the route ends.
     pub fn tick(&mut self, delta_seconds: f64) -> Option<Coordinates> {
         if !self.state.is_active {
             return None;
         }
 
         let mut current_loc = self.state.current_location?;
+        
+        // Special Case: 1-point Static Simulation
+        // Stay active indefinitely at that coordinate.
+        if self.route.waypoints.len() < 2 {
+            return Some(current_loc);
+        }
+
         let mut distance_travel_m = (self.state.current_speed_kmh as f64 * 1000.0 / 3600.0) * delta_seconds;
 
-        // Iteratively move along waypoints until distance is consumed.
         while distance_travel_m > 0.0 {
-            let next_idx = self.current_waypoint_idx + 1;
-            
-            if next_idx >= self.route.waypoints.len() {
-                if self.route.is_loop {
-                    // Restarts the route from the beginning in loop mode.
-                    self.current_waypoint_idx = 0;
-                    current_loc = self.route.waypoints[0];
-                    continue;
-                } else {
-                    // Simulation naturally completes at the last waypoint.
-                    self.stop();
-                    self.state.current_location = Some(current_loc);
-                    return Some(current_loc);
+            // Determine the next target waypoint based on direction
+            let at_end = if !self.is_reversing {
+                self.current_waypoint_idx + 1 >= self.route.waypoints.len()
+            } else {
+                self.current_waypoint_idx == 0
+            };
+
+            if at_end {
+                match self.route.end_behavior {
+                    EndOfRouteBehavior::Restart => {
+                        self.current_waypoint_idx = 0;
+                        current_loc = self.route.waypoints[0];
+                        self.is_reversing = false;
+                        continue;
+                    }
+                    EndOfRouteBehavior::Reverse => {
+                        self.is_reversing = !self.is_reversing;
+                        // Safety: we already checked waypoints.len() < 2 above
+                        continue;
+                    }
+                    EndOfRouteBehavior::Stop => {
+                        self.stop();
+                        self.state.current_location = Some(current_loc);
+                        return Some(current_loc);
+                    }
                 }
             }
+
+            let next_idx = if !self.is_reversing {
+                self.current_waypoint_idx + 1
+            } else {
+                self.current_waypoint_idx - 1
+            };
 
             let next_waypoint = &self.route.waypoints[next_idx];
             let dist_to_next = haversine_distance(&current_loc, next_waypoint);
 
             if distance_travel_m >= dist_to_next {
-                // Segment fully traversed: snap to waypoint and subtract distance.
                 distance_travel_m -= dist_to_next;
                 current_loc = *next_waypoint;
                 self.current_waypoint_idx = next_idx;
             } else {
-                // Moving partially towards the next target using bearing interpolation.
                 let bearing = calculate_bearing(&current_loc, next_waypoint);
                 current_loc = calculate_destination(&current_loc, distance_travel_m, bearing);
                 distance_travel_m = 0.0;
@@ -120,9 +141,9 @@ mod tests {
         Route {
             waypoints: vec![
                 Coordinates::new(0.0, 0.0).unwrap(),
-                Coordinates::new(0.0, 1.0).unwrap(), // Approx 111km East
+                Coordinates::new(0.0, 1.0).unwrap(), // Approx 111.19km East
             ],
-            is_loop: false,
+            end_behavior: EndOfRouteBehavior::Stop,
         }
     }
 
@@ -145,28 +166,80 @@ mod tests {
     #[test]
     fn test_tick_advancement() {
         let route = create_test_route();
-        // 3600 km/h = 1000 m/s (very fast for testing)
+        // 3600 km/h = 1000 m/s 
         let mut sim = Simulator::new(route, 3600.0).unwrap();
         sim.start();
 
-        // Tick 1 second (should move 1000 meters East)
         let loc = sim.tick(1.0).unwrap();
-        assert!(loc.lng > 0.0); // Moved East
-        assert!((loc.lat - 0.0).abs() < 1e-10); // Stayed on Equator
+        assert!(loc.lng > 0.0); 
+        assert!((loc.lat - 0.0).abs() < 1e-10); 
     }
 
     #[test]
-    fn test_route_completion() {
+    fn test_route_stop_behavior() {
         let route = create_test_route();
-        // 1,000,000 km/h to instantly finish the 111km route in one tick
-        let mut sim = Simulator::new(route, 1_000_000.0).unwrap();
+        // 500k km/h to reach end in one tick
+        let mut sim = Simulator::new(route, 500_000.0).unwrap();
         sim.start();
 
         let _ = sim.tick(1.0);
         
-        // Should have stopped because it reached the end of the non-looping route
         assert!(!sim.get_state().is_active);
         let current_loc = sim.get_state().current_location.unwrap();
-        assert_eq!(current_loc.lng, 1.0); // Snapped to final waypoint
+        assert_eq!(current_loc.lng, 1.0); 
+    }
+
+    #[test]
+    fn test_route_restart_behavior() {
+        let mut route = create_test_route();
+        route.end_behavior = EndOfRouteBehavior::Restart;
+        
+        // Use a speed that finishes exactly more than one leg but less than two
+        // 111.2km * 1.5 = ~166km. 166km/h = ~46m/s.
+        let mut sim = Simulator::new(route, 600_000.0).unwrap();
+        sim.start();
+
+        // 600k km/h = ~166km in 1s. This is 1.5 legs.
+        // Leg 1: 0->1 (111km). Restart. Leg 2: 0 -> 0.5 (~55km).
+        let loc = sim.tick(1.0).unwrap();
+        assert!(loc.lng > 0.0 && loc.lng < 1.0);
+        assert!(sim.get_state().is_active);
+    }
+
+    #[test]
+    fn test_route_reverse_behavior() {
+        let mut route = create_test_route();
+        route.end_behavior = EndOfRouteBehavior::Reverse;
+        
+        let mut sim = Simulator::new(route, 600_000.0).unwrap();
+        sim.start();
+
+        // 600k km/h = ~166km in 1s. 1.5 legs.
+        // Leg 1: 0->1 (111km). Reverse. Leg 2 (reversing): 1 -> 0.5 (~55km).
+        let loc = sim.tick(1.0).unwrap();
+        assert!(sim.is_reversing);
+        assert!(loc.lng < 1.0 && loc.lng > 0.0);
+        
+        // Tick again: should reach start and flip back
+        let _ = sim.tick(1.0);
+        assert!(!sim.is_reversing);
+    }
+
+    #[test]
+    fn test_static_persistence() {
+        let route = Route {
+            waypoints: vec![Coordinates::new(0.0, 0.0).unwrap()],
+            end_behavior: EndOfRouteBehavior::Stop,
+        };
+        let mut sim = Simulator::new(route, 60.0).unwrap();
+        sim.start();
+
+        // Tick multiple times
+        for _ in 0..10 {
+            let loc = sim.tick(1.0).unwrap();
+            assert_eq!(loc.lat, 0.0);
+            assert_eq!(loc.lng, 0.0);
+            assert!(sim.get_state().is_active); // Should NOT stop for 1 point
+        }
     }
 }
