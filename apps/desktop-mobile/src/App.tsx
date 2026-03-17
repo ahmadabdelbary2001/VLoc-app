@@ -67,15 +67,19 @@ function App() {
         }}
         onRecenter={() => {
           if (map) {
-            // Priority: 1. Spoofed Location, 2. Real Location, 3. Legacy Default
-            const target = currentLocation 
+            // Priority: 
+            // 1. If simulation is ACTIVE, use Spoofed Location (currentLocation).
+            // 2. If simulation is STOPPED, use Real Location.
+            // 3. Fallback to Legacy Default.
+            
+            const target = (isActive && currentLocation)
               ? { lat: currentLocation.lat, lng: currentLocation.lng }
               : realLocation
               ? { lat: realLocation.lat, lng: realLocation.lng }
               : DEFAULT_CENTER;
             
             map.panTo(target);
-            map.setZoom((currentLocation || realLocation) ? 15 : DEFAULT_ZOOM);
+            map.setZoom((isActive || realLocation) ? 15 : DEFAULT_ZOOM);
           }
         }}
         onClear={clearWaypoints}

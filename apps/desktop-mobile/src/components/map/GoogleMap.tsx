@@ -57,7 +57,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
-  const { waypoints, currentLocation, realLocation } = useSimulation();
+  const { waypoints, currentLocation, realLocation, isActive } = useSimulation();
 
   // Initialize Map
   useEffect(() => {
@@ -68,15 +68,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         styles: theme === "dark" ? darkMapStyle : [],
         disableDefaultUI: true,
         clickableIcons: false,
+        gestureHandling: "greedy",
       });
 
-      if (onMapClick) {
-        gMap.addListener("click", (e: google.maps.MapMouseEvent) => {
-          if (e.latLng) {
-            onMapClick(e.latLng.lat(), e.latLng.lng());
-          }
-        });
-      }
+      gMap.addListener("click", (e: google.maps.MapMouseEvent) => {
+        if (e.latLng && onMapClick) {
+          onMapClick(e.latLng.lat(), e.latLng.lng());
+        }
+      });
 
       setMap(gMap);
     }
@@ -91,7 +90,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
   // Update User Location Marker (Real or Spoofed)
   useEffect(() => {
-    const loc = currentLocation || realLocation;
+    // Market location: ONLY use currentLocation if simulation is ACTIVE
+    const loc = (isActive && currentLocation) ? currentLocation : realLocation;
     
     if (!map || !loc) {
       if (userMarkerRef.current) {
@@ -102,7 +102,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
 
     const position = { lat: loc.lat, lng: loc.lng };
-    const isSpoofed = !!currentLocation;
+    // Market type: ONLY show Spoof if simulation is ACTIVE
+    const isSpoofed = isActive && !!currentLocation;
     const isMoving = waypoints.length > 1;
 
     // Standard "Teardrop" Pin SVG Path
