@@ -103,40 +103,65 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
     const position = { lat: loc.lat, lng: loc.lng };
     const isSpoofed = !!currentLocation;
+    const isMoving = waypoints.length > 1;
+
+    // Standard "Teardrop" Pin SVG Path
+    const pinPath = "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z";
+
+    // Define Dynamic Icons
+    const getIcon = () => {
+      if (!isSpoofed) {
+        // Real Location: Standard Blue Pulse Dot
+        return {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: "#3b82f6",
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: "white",
+        };
+      }
+      
+      if (isMoving) {
+        // Moving Spoof: Blue Arrow (Directional)
+        return {
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 6,
+          fillColor: "#3b82f6",
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: "white",
+        };
+      } else {
+        // Static Spoof: Standard Green Pin
+        return {
+          path: pinPath,
+          anchor: new google.maps.Point(12, 22),
+          fillColor: "#22c55e", 
+          fillOpacity: 1,
+          strokeWeight: 1.5,
+          strokeColor: "white",
+          scale: 1.5,
+        };
+      }
+    };
 
     if (!userMarkerRef.current) {
       userMarkerRef.current = new google.maps.Marker({
         position,
         map,
-        title: isSpoofed ? "Spoofed Location" : "Real Location",
-        icon: {
-          path: isSpoofed 
-            ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW 
-            : google.maps.SymbolPath.CIRCLE,
-          scale: isSpoofed ? 6 : 8,
-          fillColor: "#3b82f6",
-          fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: "white",
-        },
+        title: isSpoofed ? (isMoving ? "Moving Spoof" : "Static Spoof") : "Real Location",
+        icon: getIcon(),
+        zIndex: 1000,
       });
     } else {
       userMarkerRef.current.setPosition(position);
-      userMarkerRef.current.setTitle(isSpoofed ? "Spoofed Location" : "Real Location");
-      userMarkerRef.current.setIcon({
-        path: isSpoofed 
-          ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW 
-          : google.maps.SymbolPath.CIRCLE,
-        scale: isSpoofed ? 6 : 8,
-        fillColor: "#3b82f6",
-        fillOpacity: 1,
-        strokeWeight: 2,
-        strokeColor: "white",
-      });
+      userMarkerRef.current.setTitle(isSpoofed ? (isMoving ? "Moving Spoof" : "Static Spoof") : "Real Location");
+      userMarkerRef.current.setIcon(getIcon());
     }
-  }, [currentLocation, realLocation, map]);
+  }, [currentLocation, realLocation, waypoints.length, map]);
 
-  // Update Markers & Polyline when waypoints change
+  // Update Waypoint Markers & Polyline when waypoints change
   useEffect(() => {
     if (!map) return;
 
@@ -154,16 +179,18 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         label: {
           text: (index + 1).toString(),
           color: "white",
-          fontSize: "12px",
+          fontSize: "11px",
           fontWeight: "bold",
         },
         icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: "#3b82f6", // tailwind blue-500
-          fillOpacity: 1,
-          strokeWeight: 2,
+          path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
+          anchor: new google.maps.Point(12, 22),
+          fillColor: "#3b82f6",
+          fillOpacity: 0.9,
+          strokeWeight: 1,
           strokeColor: "white",
-          scale: 10,
+          scale: 1.2,
+          labelOrigin: new google.maps.Point(12, 9),
         },
       });
       markersRef.current.push(marker);

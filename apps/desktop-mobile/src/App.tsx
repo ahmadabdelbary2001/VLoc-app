@@ -50,11 +50,17 @@ function App() {
       {/* UI Overlay */}
       <MapControlsOverlay
         isPlaying={isActive}
-        isMovingMode={true}
+        isMovingMode={waypoints.length > 1}
         hasSelection={waypoints.length > 0}
         onPlayToggle={() => {
           if (!isActive) {
-            setIsModalOpen(true);
+            if (waypoints.length === 1) {
+              // Static Mode: Start immediately with defaults
+              start({ speed: 10, inaccuracy: 0, loopMode: "None" });
+            } else {
+              // Moving Mode: Show settings
+              setIsModalOpen(true);
+            }
           } else {
             stop();
           }

@@ -22,7 +22,7 @@ impl Simulator {
             return Err(EngineError::InvalidSpeed);
         }
 
-        if route.waypoints.len() < 2 {
+        if route.waypoints.len() < 1 {
             return Err(EngineError::InvalidRoute);
         }
 
