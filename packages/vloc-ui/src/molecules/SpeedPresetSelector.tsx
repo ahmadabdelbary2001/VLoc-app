@@ -35,7 +35,7 @@ export const SpeedPresetSelector = ({
 	return (
 		<div
 			className={cn(
-				"flex gap-2 p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10",
+				"flex gap-2 p-1.5 bg-muted/50 backdrop-blur-xl rounded-2xl border border-border/50 shadow-sm",
 				className,
 			)}
 		>
@@ -50,20 +50,21 @@ export const SpeedPresetSelector = ({
 						size="sm"
 						onClick={() => onModeChange(preset.id)}
 						className={cn(
-							"flex-1 flex flex-col items-center gap-1 h-auto py-3 rounded-lg transition-all",
-							isActive ? "shadow-lg scale-105" : "hover:bg-white/10",
+							"flex-1 flex flex-col items-center gap-1.5 h-auto py-3.5 rounded-xl transition-all duration-300",
+							isActive 
+								? "shadow-xl shadow-primary/30 scale-[1.02]" 
+								: "hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground",
 						)}
 					>
 						<Icon
 							className={cn(
-								"w-5 h-5",
-								isActive ? "text-white" : "text-white/60",
+								"w-5 h-5 transition-transform duration-300",
+								isActive ? "scale-110" : "",
 							)}
 						/>
 						<span
 							className={cn(
-								"text-[10px] font-bold uppercase tracking-wider",
-								isActive ? "text-white" : "text-white/40",
+								"text-[10px] font-black uppercase tracking-widest transition-colors",
 							)}
 						>
 							{preset.id}

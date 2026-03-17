@@ -37,7 +37,13 @@ export const Slider = ({
 			)}
 			<input
 				type="range"
-				className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary focus:outline-none"
+				className={cn(
+					"h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary focus:outline-none transition-all",
+					// Webkit (Chrome, Safari, Edge)
+					"[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:hover:scale-125 active:[&::-webkit-slider-thumb]:scale-110",
+					// Firefox
+					"[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white dark:[&::-moz-range-thumb]:border-background [&::-moz-range-thumb]:shadow-lg [&::-moz-range-thumb]:transition-all [&::-moz-range-thumb]:hover:scale-125 active:[&::-moz-range-thumb]:scale-110 [&::-moz-range-thumb]:border-none",
+				)}
 				{...props}
 			/>
 		</div>

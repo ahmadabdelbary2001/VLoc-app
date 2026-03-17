@@ -7,7 +7,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: "primary" | "secondary" | "ghost" | "danger" | "glass";
+	variant?: "primary" | "secondary" | "ghost" | "danger" | "glass" | "success";
 	size?: "sm" | "md" | "lg" | "icon";
 	children: ReactNode;
 }
@@ -27,25 +27,28 @@ export const Button = ({
 	...props
 }: ButtonProps) => {
 	const variants = {
-		primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-		secondary: "bg-muted text-secondary-foreground hover:bg-muted/80",
+		primary:
+			"bg-blue-600 text-white hover:bg-blue-700 opacity-100 shadow-lg shadow-blue-500/50 border-none",
+		success:
+			"bg-emerald-600 text-white hover:bg-emerald-700 opacity-100 shadow-lg shadow-emerald-500/50 border-none",
+		secondary: "bg-muted text-foreground hover:bg-muted/80",
 		ghost: "hover:bg-transparent text-foreground hover:bg-muted/50",
-		danger: "bg-red-500 text-white hover:bg-red-600 shadow-sm",
+		danger: "bg-rose-600 text-white hover:bg-rose-700 opacity-100 shadow-lg shadow-rose-500/40 border-none",
 		glass:
-			"bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all duration-300 shadow-xl",
+			"bg-white/40 dark:bg-black/60 backdrop-blur-md border-[1.5px] border-white/60 dark:border-white/30 text-foreground dark:text-white hover:bg-white/50 dark:hover:bg-black/80 transition-all duration-300 shadow-2xl",
 	};
 
 	const sizes = {
 		sm: "h-8 px-3 text-xs",
 		md: "h-10 px-4 py-2",
-		lg: "h-12 px-8 text-lg",
+		lg: "h-14 px-10 text-lg font-bold uppercase tracking-wider",
 		icon: "h-10 w-10 flex items-center justify-center rounded-full",
 	};
 
 	return (
 		<button
 			className={cn(
-				"inline-flex items-center justify-center rounded-md font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:pointer-events-none",
+				"inline-flex items-center justify-center rounded-xl font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 hover:ring-2 hover:ring-primary/50 hover:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none",
 				variants[variant],
 				sizes[size],
 				className,

@@ -33,6 +33,15 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);
 
+  // Sync theme with document classList for Tailwind's "class" dark mode
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) {
       setLoadError(new Error("VITE_GOOGLE_MAPS_API_KEY is missing in .env"));

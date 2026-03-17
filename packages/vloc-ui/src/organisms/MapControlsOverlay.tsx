@@ -88,19 +88,21 @@ export const MapControlsOverlay = ({
 				{/* Play/Stop Button - THE MAIN ACTION */}
 				{(hasSelection || isPlaying) && (
 					<Button
-						variant={isPlaying ? "danger" : "primary"}
+						variant={isPlaying ? "danger" : "success"}
 						size="lg"
 						onClick={onPlayToggle}
 						className={cn(
-							"rounded-full w-16 h-16 shadow-2xl transition-all duration-500",
-							isPlaying ? "animate-pulse" : "hover:scale-110 shadow-primary/40",
+							"rounded-full w-24 h-24 shadow-[0_0_50px_-5px_rgba(16,185,129,0.8)] dark:shadow-emerald-500/60 border-4 border-white dark:border-white/20 transition-all duration-500",
+							isPlaying 
+								? "animate-pulse shadow-rose-500/60" 
+								: "hover:scale-110 shadow-emerald-500/60",
 						)}
 						title={isPlaying ? "Stop Simulation" : "Start Simulation"}
 					>
 						{isPlaying ? (
-							<Pause className="w-8 h-8 fill-current" />
+							<Pause className="w-10 h-10 fill-current" />
 						) : (
-							<PlayIcon className="w-8 h-8 fill-current translate-x-0.5" />
+							<PlayIcon className="w-10 h-10 fill-current translate-x-1" />
 						)}
 					</Button>
 				)}
@@ -119,9 +121,9 @@ export const MapControlsOverlay = ({
 			</div>
 
 			{/* Mode Indicator Overlay */}
-			<div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
+			<div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-background/95 backdrop-blur-md border border-border rounded-full flex items-center gap-2 shadow-xl">
 				<MapIcon className="w-4 h-4 text-primary" />
-				<span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
+				<span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">
 					{isMovingMode ? "Route Planner" : "Direct Teleport"}
 				</span>
 			</div>

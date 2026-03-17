@@ -54,14 +54,16 @@ export const RouteSettingsModal = ({
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-			<div className="w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative">
+			<div className="relative w-full max-w-lg bg-background rounded-3xl overflow-hidden shadow-2xl border border-border/50 animate-in fade-in zoom-in duration-300">
 				{/* Header */}
-				<div className="px-6 py-4 border-b border-white/5 flex justify-between items-center">
-					<div className="flex items-center gap-2">
-						<Settings2 className="w-5 h-5 text-primary" />
+				<div className="p-6 bg-muted/40 border-b border-border/50 flex justify-between items-center">
+					<div className="flex items-center gap-3">
+						<div className="p-2 bg-primary/10 rounded-xl">
+							<Settings2 className="w-5 h-5 text-primary" />
+						</div>
 						<Typography
 							variant="h3"
-							className="m-0 text-xl font-bold tracking-tight text-white"
+							className="m-0 text-xl font-bold tracking-tight text-foreground/90"
 						>
 							Simulation Settings
 						</Typography>
@@ -70,16 +72,16 @@ export const RouteSettingsModal = ({
 						variant="ghost"
 						size="icon"
 						onClick={onClose}
-						className="rounded-full hover:bg-white/5"
+						className="rounded-full hover:bg-muted/80 transition-colors"
 					>
-						<X className="w-5 h-5 text-white/60" />
+						<X className="w-5 h-5 text-muted-foreground" />
 					</Button>
 				</div>
 
 				{/* Content */}
-				<div className="p-6 space-y-8">
+				<div className="p-8 space-y-10">
 					{/* Speed Section */}
-					<div className="space-y-4">
+					<div className="space-y-6">
 						<SpeedPresetSelector
 							activeMode={activePreset}
 							onModeChange={handlePresetChange}
@@ -102,18 +104,18 @@ export const RouteSettingsModal = ({
 						max={50}
 						value={inaccuracy}
 						onChange={(e) => setInaccuracy(Number(e.target.value))}
-						className="opacity-80"
+						className="opacity-90"
 					/>
 
 					{/* Loop Mode Section */}
-					<div className="space-y-3">
+					<div className="space-y-4">
 						<Typography
 							variant="small"
-							className="text-white/40 uppercase tracking-widest"
+							className="text-muted-foreground font-bold uppercase tracking-[0.15em] text-[10px]"
 						>
 							End of Route Behavior
 						</Typography>
-						<div className="grid grid-cols-3 gap-2">
+						<div className="grid grid-cols-3 gap-3">
 							{["stop", "reverse", "restart"].map((mode) => (
 								<Button
 									key={mode}
@@ -121,10 +123,10 @@ export const RouteSettingsModal = ({
 									size="sm"
 									onClick={() => setLoopMode(mode)}
 									className={cn(
-										"text-[10px] uppercase font-bold tracking-tighter transition-all",
+										"text-[10px] uppercase font-black tracking-widest transition-all h-12 rounded-xl",
 										loopMode === mode
-											? ""
-											: "bg-white/5 border-transparent opacity-60",
+											? "shadow-lg shadow-primary/20"
+											: "bg-muted/30 border-transparent opacity-70 hover:opacity-100",
 									)}
 								>
 									{mode}
@@ -135,21 +137,21 @@ export const RouteSettingsModal = ({
 				</div>
 
 				{/* Footer */}
-				<div className="p-6 bg-white/5 border-t border-white/5 flex gap-4">
+				<div className="p-6 bg-muted/80 backdrop-blur-xl border-t border-border/50 flex gap-4">
 					<Button
 						variant="ghost"
-						className="flex-1 text-white/60"
+						className="flex-1 text-muted-foreground font-bold hover:bg-background/50"
 						onClick={onClose}
 					>
 						Cancel
 					</Button>
 					<Button
-						variant="primary"
-						className="flex-1 gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all hover:scale-105 active:scale-95"
+						variant="success"
+						className="flex-1 gap-2 shadow-2xl shadow-emerald-500/60 border-2 border-white/20 hover:scale-[1.02] active:scale-95 transition-all opacity-100"
 						onClick={() => onPlay({ speed, inaccuracy, loopMode })}
 					>
-						<Play className="w-4 h-4 fill-current" />
-						Launch Simulation
+						<Play className="w-4 h-4 fill-current text-white" />
+						<span className="text-white font-bold tracking-tight">Launch Simulation</span>
 					</Button>
 				</div>
 			</div>

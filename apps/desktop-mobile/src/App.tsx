@@ -40,7 +40,7 @@ function App() {
   }, [map, realLocation, isActive, waypoints.length, hasCentered]);
 
   return (
-    <div className="h-screen w-screen bg-zinc-950 overflow-hidden relative">
+    <div className="h-screen w-screen bg-background transition-colors duration-300 overflow-hidden relative">
       {/* Real Map Surface */}
       <div className="absolute inset-0">
         <GoogleMap 
