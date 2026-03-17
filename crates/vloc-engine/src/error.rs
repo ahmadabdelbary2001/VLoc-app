@@ -2,7 +2,7 @@ use serde::Serialize;
 use thiserror::Error;
 
 /// Core domain errors for the VLoc simulation engine
-#[derive(Debug, Error, Serialize)]
+#[derive(Debug, Error, Serialize, specta::Type)]
 #[serde(tag = "type", content = "message")]
 pub enum EngineError {
     #[error("Invalid coordinate values provided: {0}")]

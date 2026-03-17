@@ -77,6 +77,22 @@ importers:
 
   packages/config-typescript: {}
 
+  packages/vloc-api-bindings:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.0.0
+        version: 2.10.1
+    devDependencies:
+      '@vloc/config-biome':
+        specifier: workspace:*
+        version: link:../config-biome
+      '@vloc/config-typescript':
+        specifier: workspace:*
+        version: link:../config-typescript
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/vloc-core:
     devDependencies:
       '@biomejs/biome':

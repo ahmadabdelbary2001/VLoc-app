@@ -2,5 +2,13 @@
   "name": "@vloc/config-typescript",
   "version": "0.1.0",
   "private": true,
-  "license": "GPL-3.0-or-later"
+  "license": "GPL-3.0-or-later",
+  "files": [
+    "tsconfig.react.json",
+    "tsconfig.node.json"
+  ],
+  "exports": {
+    "./tsconfig.react.json": "./tsconfig.react.json",
+    "./tsconfig.node.json": "./tsconfig.node.json"
+  }
 }

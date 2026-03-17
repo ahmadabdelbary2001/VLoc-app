@@ -1,0 +1,18 @@
+{
+  "name": "@vloc/api-bindings",
+  "version": "0.1.0",
+  "description": "Auto-generated Tauri IPC Type Contracts via Specta",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@vloc/config-typescript": "workspace:*",
+    "@vloc/config-biome": "workspace:*",
+    "typescript": "^5.0.0"
+  }
+}

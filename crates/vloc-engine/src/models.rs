@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{EngineError, EngineResult};
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, specta::Type)]
 pub struct Coordinates {
     pub lat: f64,
     pub lng: f64,
@@ -28,13 +28,13 @@ impl Coordinates {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct Route {
     pub waypoints: Vec<Coordinates>,
     pub is_loop: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct SpoofingState {
     pub is_active: bool,
     pub current_location: Option<Coordinates>,
