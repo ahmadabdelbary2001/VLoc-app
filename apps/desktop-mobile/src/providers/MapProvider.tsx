@@ -12,6 +12,17 @@ interface MapContextType {
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
 
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+// Global initialization to ensure it's only called once
+if (GOOGLE_MAPS_API_KEY) {
+  setOptions({
+    key: GOOGLE_MAPS_API_KEY,
+    v: "weekly",
+    libraries: ["geometry"],
+  });
+}
+
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -23,11 +34,10 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    setOptions({
-      key: "", // USER: Put your Google Maps API Key here
-      v: "weekly",
-      libraries: ["geometry"],
-    });
+    if (!GOOGLE_MAPS_API_KEY) {
+      setLoadError(new Error("VITE_GOOGLE_MAPS_API_KEY is missing in .env"));
+      return;
+    }
 
     // Modern way to load Google Maps libraries
     Promise.all([

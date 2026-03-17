@@ -1,14 +1,39 @@
 mod commands;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+use commands::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let simulator_state = Arc::new(Mutex::new(None));
+    let simulator_clone = Arc::clone(&simulator_state);
+
     tauri::Builder::default()
+        .manage(AppState {
+            simulator: simulator_state,
+        })
         .invoke_handler(tauri::generate_handler![
             commands::start_route,
             commands::stop_route,
             commands::get_current_state
         ])
-        .setup(|app| {
+        .setup(move |app| {
+            // Background Simulation Loop (10Hz)
+            tauri::async_runtime::spawn(async move {
+                let mut last_tick = Instant::now();
+                loop {
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    let now = Instant::now();
+                    let delta = now.duration_since(last_tick).as_secs_f64();
+                    last_tick = now;
+
+                    let mut sim_lock = simulator_clone.lock().unwrap();
+                    if let Some(sim) = sim_lock.as_mut() {
+                        sim.tick(delta);
+                    }
+                }
+            });
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
