@@ -17,3 +17,5 @@ src-tauri/gen/
 .env.local
 .DS_Store
 *.log
+
+*storybook.log

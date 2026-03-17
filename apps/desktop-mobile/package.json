@@ -1,8 +1,7 @@
 {
-  "name": "desktop-mobile",
+  "name": "@vloc/desktop",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -13,7 +12,10 @@
     "@tauri-apps/api": "^2.0.0-rc.0",
     "@tauri-apps/plugin-log": "^2.0.0-rc.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.363.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0-rc.0",

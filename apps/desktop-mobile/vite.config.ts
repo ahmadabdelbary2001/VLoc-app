@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: {
-    port: 1420,
+    fs: {
+      allow: ["..", "../../packages"],
+    },
+    port: 1422,
     strictPort: true,
     host: host || false,
     hmr: host
@@ -21,6 +24,9 @@ export default defineConfig({
     watch: {
       ignored: ["**/src-tauri/**"],
     },
+  },
+  optimizeDeps: {
+    exclude: ["@vloc/ui", "@vloc/api-bindings"],
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
