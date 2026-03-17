@@ -10,20 +10,23 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^2.0.2",
     "@tauri-apps/api": "^2.0.0-rc.0",
     "@tauri-apps/plugin-log": "^2.0.0-rc.0",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.363.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.363.0",
-    "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0-rc.0",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^25.5.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vloc/api-bindings": "workspace:*",
     "@vloc/config-typescript": "workspace:*",
     "@vloc/core": "workspace:*",
     "@vloc/ui": "workspace:*",

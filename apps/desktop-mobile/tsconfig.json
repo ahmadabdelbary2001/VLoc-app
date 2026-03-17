@@ -2,7 +2,7 @@
   "extends": "../../packages/config-typescript/tsconfig.react.json",
   "include": ["src"],
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node", "google.maps"]
   },
   "references": [{ "path": "./tsconfig.node.json" }]
 }

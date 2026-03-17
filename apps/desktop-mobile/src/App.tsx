@@ -1,40 +1,59 @@
 import { useState } from "react";
 import { 
-  Typography, 
   MapControlsOverlay, 
   RouteSettingsModal 
 } from "@vloc/ui";
+import { GoogleMap } from "./components/map/GoogleMap";
+import { useSimulation } from "./providers/SimulationProvider";
+import { useMap } from "./providers/MapProvider";
 
 function App() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { 
+    isActive, 
+    waypoints, 
+    addWaypoint, 
+    clearWaypoints, 
+    removeLastWaypoint,
+    start,
+    stop 
+  } = useSimulation();
+
+  const { map, toggleTheme } = useMap();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasSelection, setHasSelection] = useState(true);
 
   return (
     <div className="h-screen w-screen bg-zinc-950 overflow-hidden relative">
-      {/* Simulation Surface Dummy */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <Typography variant="h1" className="text-white/5 font-black text-9xl uppercase tracking-tighter rotate-12">
-          VLOC ENGINE
-        </Typography>
+      {/* Real Map Surface */}
+      <div className="absolute inset-0">
+        <GoogleMap 
+          center={{ lat: 33.5138, lng: 36.2765 }} // Default center (e.g., Damascus)
+          zoom={15}
+          onMapClick={(lat, lng) => !isActive && addWaypoint(lat, lng)}
+        />
       </div>
 
       {/* UI Overlay */}
       <MapControlsOverlay
-        isPlaying={isPlaying}
+        isPlaying={isActive}
         isMovingMode={true}
-        hasSelection={hasSelection}
+        hasSelection={waypoints.length > 0}
         onPlayToggle={() => {
-          if (!isPlaying) {
+          if (!isActive) {
             setIsModalOpen(true);
           } else {
-            setIsPlaying(false);
+            stop();
           }
         }}
-        onRecenter={() => alert("Recentering...")}
-        onClear={() => setHasSelection(false)}
-        onThemeToggle={() => alert("Theme Toggled")}
-        onRemoveLast={() => console.log("Remove last")}
+        onRecenter={() => {
+          if (map) {
+            map.panTo({ lat: 33.5138, lng: 36.2765 });
+            map.setZoom(15);
+          }
+        }}
+        onClear={clearWaypoints}
+        onThemeToggle={toggleTheme}
+        onRemoveLast={removeLastWaypoint}
       />
 
       {/* Settings Modal */}
@@ -42,9 +61,8 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onPlay={(settings: { speed: number; inaccuracy: number; loopMode: string }) => {
-          console.log("Settings applied:", settings);
+          start(settings);
           setIsModalOpen(false);
-          setIsPlaying(true);
         }}
       />
     </div>
