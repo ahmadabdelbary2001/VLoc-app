@@ -9,6 +9,7 @@
   ],
   "exports": {
     "./tsconfig.react.json": "./tsconfig.react.json",
-    "./tsconfig.node.json": "./tsconfig.node.json"
+    "./tsconfig.node.json": "./tsconfig.node.json",
+    "./package.json": "./package.json"
   }
 }

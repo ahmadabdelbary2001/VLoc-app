@@ -1,11 +1,15 @@
 use crate::models::Coordinates;
 
 
-/// Earth's radius in meters. Using mean radius.
+/// Earth's mean radius in meters for planetary-scale calculations.
 const EARTH_RADIUS_M: f64 = 6_371_000.0;
 
-/// Calculates the shortest distance (great-circle) between two points on the surface of a sphere.
-/// Returns the distance in meters.
+/// Calculates the surface distance between two coordinates using the Haversine formula.
+/// 
+/// **Why**: This formula remains accurate for small distances while avoiding the 
+/// high computational cost of the Vincenty's formula.
+/// **How**: It uses the spherical law of cosines to determine the central angle 
+/// between two points, then multiplies by the Earth's radius.
 pub fn haversine_distance(p1: &Coordinates, p2: &Coordinates) -> f64 {
     let lat1_rad = p1.lat.to_radians();
     let lat2_rad = p2.lat.to_radians();
@@ -20,8 +24,11 @@ pub fn haversine_distance(p1: &Coordinates, p2: &Coordinates) -> f64 {
     EARTH_RADIUS_M * c
 }
 
-/// Calculates the initial bearing (forward azimuth) from the start point to the destination point.
-/// Returns the bearing in degrees (0 to 360).
+/// Computes the initial bearing from point p1 to p2.
+/// 
+/// **Why**: Needed to determine the direction of travel for path interpolation.
+/// **How**: Calculates the horizontal angle relative to the meridian using 
+/// the atan2 function to handle quadrant ambiguity.
 pub fn calculate_bearing(p1: &Coordinates, p2: &Coordinates) -> f64 {
     let lat1_rad = p1.lat.to_radians();
     let lat2_rad = p2.lat.to_radians();
@@ -34,12 +41,14 @@ pub fn calculate_bearing(p1: &Coordinates, p2: &Coordinates) -> f64 {
     let brng_rad = y.atan2(x);
     let brng_deg = brng_rad.to_degrees();
 
-    // Normalize to 0-360
+    // Normalizes results to range [0, 360] for consistent compass logic.
     (brng_deg + 360.0) % 360.0
 }
 
-/// Given a starting point, initial bearing (degrees), and distance (meters),
-/// calculate the destination coordinates.
+/// Computes destination coordinates given a starting point, distance, and direction.
+/// 
+/// **Why**: Critical for simulating real-time GPS movement between waypoints.
+/// **How**: Uses spherical trigonometry to project 2D displacement onto the 3D surface of the Earth.
 pub fn calculate_destination(start: &Coordinates, distance_m: f64, bearing_deg: f64) -> Coordinates {
     let ang_dist = distance_m / EARTH_RADIUS_M;
     let bearing_rad = bearing_deg.to_radians();
@@ -57,7 +66,7 @@ pub fn calculate_destination(start: &Coordinates, distance_m: f64, bearing_deg: 
     Coordinates {
         lat: lat2_rad.to_degrees(),
         lng: lng2_rad.to_degrees(),
-        // Altitude is currently carried over statically without interpolation
+        // Altitude is currently preserved as a static attribute during 2D projection.
         altitude: start.altitude,
     }
 }

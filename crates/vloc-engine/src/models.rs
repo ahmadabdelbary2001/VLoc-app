@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{EngineError, EngineResult};
 
+/// Representation of a specific geographical location.
+/// 
+/// **Why**: Needed for all simulation and map operations. 
+/// We use f64 for high-precision GPS coordinate storage.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, specta::Type)]
 pub struct Coordinates {
     pub lat: f64,
@@ -28,12 +32,18 @@ impl Coordinates {
     }
 }
 
+/// Defines a planned path for simulation.
+/// 
+/// **Why**: Houses the waypoint collection and loop settings required by the Simulator.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct Route {
     pub waypoints: Vec<Coordinates>,
     pub is_loop: bool,
 }
 
+/// Encapsulates the complete status of the spoofing engine at a point in time.
+/// 
+/// **Why**: This is the primary data structure synced between Rust and the React UI.
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct SpoofingState {
     pub is_active: bool,

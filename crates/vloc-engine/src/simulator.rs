@@ -2,13 +2,21 @@ use crate::error::{EngineError, EngineResult};
 use crate::math::{calculate_bearing, calculate_destination, haversine_distance};
 use crate::models::{Coordinates, Route, SpoofingState};
 
+/// Main simulation engine responsible for coordinate interpolation and route management.
 pub struct Simulator {
+    /// Ordered list of coordinates to be traversed.
     route: Route,
+    /// Current internal state of the simulation.
     state: SpoofingState,
+    /// Tracks the current segment being traversed in the route.
     current_waypoint_idx: usize,
 }
 
 impl Simulator {
+    /// Initializes a new simulator with a validated route and speed.
+    /// 
+    /// **How**: Checks if the speed is positive and the route contains enough points 
+    /// to form at least one segment.
     pub fn new(route: Route, initial_speed_kmh: f32) -> EngineResult<Self> {
         if initial_speed_kmh <= 0.0 {
             return Err(EngineError::InvalidSpeed);
@@ -26,7 +34,7 @@ impl Simulator {
                 is_active: false,
                 current_location,
                 current_speed_kmh: initial_speed_kmh,
-                remaining_distance_meters: None, // Could pre-calculate total route distance here
+                remaining_distance_meters: None,
             },
             current_waypoint_idx: 0,
         })
@@ -52,27 +60,31 @@ impl Simulator {
         Ok(())
     }
 
-    /// Advances the simulation by a given time delta (in seconds).
-    /// Returns the new Coordinates if active, or None if inactive/finished.
+    /// Advances the simulation by a given time delta.
+    /// 
+    /// **How**: Calculates the displacement for the time period based on current speed. 
+    /// It then traverses the route's segments, consuming the distance until the 
+    /// delta is exhausted or the route ends.
     pub fn tick(&mut self, delta_seconds: f64) -> Option<Coordinates> {
         if !self.state.is_active {
             return None;
         }
 
         let mut current_loc = self.state.current_location?;
-        let mut distance_to_travel_m = (self.state.current_speed_kmh as f64 * 1000.0 / 3600.0) * delta_seconds;
+        let mut distance_travel_m = (self.state.current_speed_kmh as f64 * 1000.0 / 3600.0) * delta_seconds;
 
-        // Move along waypoints until distance is consumed or route ends
-        while distance_to_travel_m > 0.0 {
+        // Iteratively move along waypoints until distance is consumed.
+        while distance_travel_m > 0.0 {
             let next_idx = self.current_waypoint_idx + 1;
             
             if next_idx >= self.route.waypoints.len() {
                 if self.route.is_loop {
+                    // Restarts the route from the beginning in loop mode.
                     self.current_waypoint_idx = 0;
                     current_loc = self.route.waypoints[0];
                     continue;
                 } else {
-                    // Reached end of route
+                    // Simulation naturally completes at the last waypoint.
                     self.stop();
                     self.state.current_location = Some(current_loc);
                     return Some(current_loc);
@@ -82,16 +94,16 @@ impl Simulator {
             let next_waypoint = &self.route.waypoints[next_idx];
             let dist_to_next = haversine_distance(&current_loc, next_waypoint);
 
-            if distance_to_travel_m >= dist_to_next {
-                // Overshot or reached exactly - snap to waypoint and subtract distance
-                distance_to_travel_m -= dist_to_next;
+            if distance_travel_m >= dist_to_next {
+                // Segment fully traversed: snap to waypoint and subtract distance.
+                distance_travel_m -= dist_to_next;
                 current_loc = *next_waypoint;
                 self.current_waypoint_idx = next_idx;
             } else {
-                // Move partially towards next waypoint
+                // Moving partially towards the next target using bearing interpolation.
                 let bearing = calculate_bearing(&current_loc, next_waypoint);
-                current_loc = calculate_destination(&current_loc, distance_to_travel_m, bearing);
-                distance_to_travel_m = 0.0; // Finished this tick
+                current_loc = calculate_destination(&current_loc, distance_travel_m, bearing);
+                distance_travel_m = 0.0;
             }
         }
 

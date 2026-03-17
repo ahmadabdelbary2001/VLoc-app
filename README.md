@@ -24,32 +24,38 @@ vloc-monorepo/
     └── vloc-os-mock/          # OS-specific Location Mocking Plugins
 ```
 
+## Project Philosophy
+1.  **Strict Type Safety**: End-to-end types from Rust structs to React components.
+2.  **Modular by Default**: Every component is isolated and independently testable.
+3.  **Core Engineering Rules**: All code must follow the "Why/How" documentation protocol and Intermediate English standard.
+
 ## Tech Stack
-- **Frameworks:** Tauri v2, React, Vite
-- **Language:** Rust (Backend), TypeScript (Frontend)
-- **Styling:** Tailwind CSS
-- **State Management:** Zustand, TanStack Query
-- **Tooling:** Biome (Lint/Format), Husky (Git Hooks), Storybook (UI Docs)
-- **Type Safety:** tauri-specta (End-to-end TS bindings)
+-   **Frameworks:** Tauri v2, React, Vite.
+-   **Language:** Rust (Engine/OS), TypeScript (UI/Glue).
+-   **State Management:** Zustand (Stores), TanStack Query (Server State).
+-   **Type Safety:** Specta & `vloc-api-bindings` for IPC contracts.
+-   **Documentation:** Storybook (UI) and `rustdoc` (Engine).
 
 ## Getting Started
 
 ### Prerequisites
-1. **Node.js** (>= 18)
-2. **pnpm** (>= 8)
-3. **Rust** & Cargo (`rustup`)
-4. OS-specific build dependencies for Tauri.
+1.  **Node.js** (>= 18) and **pnpm** (>= 8).
+2.  **Rust** & Cargo (`rustup`).
+3.  OS-specific build dependencies (C++ build tools, WebView2, etc.).
 
-### Setup
+### Setup & Development
 
 ```bash
 # 1. Install dependencies and link workspaces
 pnpm install
 
-# 2. Setup git hooks (Husky)
-pnpm run prepare
+# 2. Synchronize API Contracts (Rust types -> TS)
+# This generates types in packages/vloc-api-bindings/src/bindings.ts
+cd crates/vloc-engine
+cargo run --bin export_bindings
 
-# 3. Start development server (React + Tauri)
+# 3. Start development environment
+cd ../..
 pnpm dev
 ```
 

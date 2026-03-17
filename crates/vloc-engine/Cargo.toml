@@ -10,5 +10,5 @@ license = "GPL-3.0-or-later"
 thiserror = "1.0"
 tracing = "0.1"
 serde = { version = "1.0", features = ["derive"] }
-specta = { version = "=2.0.0-rc.22", features = ["derive"] }
+specta = { version = "=2.0.0-rc.22", features = ["derive", "export"] }
 specta-typescript = "0.0.9"
