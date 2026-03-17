@@ -47,16 +47,17 @@ const darkMapStyle: google.maps.MapTypeStyle[] = [
 ];
 
 export const GoogleMap: React.FC<GoogleMapProps> = ({
-  center = { lat: 33.5138, lng: 36.2765 },
-  zoom = 15,
+  center = { lat: 35.0, lng: 39.0 },
+  zoom = 6.2,
   className,
   onMapClick,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const { isLoaded, loadError, setMap, map, theme } = useMap();
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
-  const { waypoints } = useSimulation();
+  const { waypoints, currentLocation, realLocation } = useSimulation();
 
   // Initialize Map
   useEffect(() => {
@@ -68,7 +69,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         disableDefaultUI: true,
         clickableIcons: false,
       });
-// ... (rest of initialize effect)
+
       if (onMapClick) {
         gMap.addListener("click", (e: google.maps.MapMouseEvent) => {
           if (e.latLng) {
@@ -87,6 +88,53 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       map.setOptions({ styles: theme === "dark" ? darkMapStyle : [] });
     }
   }, [theme, map]);
+
+  // Update User Location Marker (Real or Spoofed)
+  useEffect(() => {
+    const loc = currentLocation || realLocation;
+    
+    if (!map || !loc) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setMap(null);
+        userMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const position = { lat: loc.lat, lng: loc.lng };
+    const isSpoofed = !!currentLocation;
+
+    if (!userMarkerRef.current) {
+      userMarkerRef.current = new google.maps.Marker({
+        position,
+        map,
+        title: isSpoofed ? "Spoofed Location" : "Real Location",
+        icon: {
+          path: isSpoofed 
+            ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW 
+            : google.maps.SymbolPath.CIRCLE,
+          scale: isSpoofed ? 6 : 8,
+          fillColor: "#3b82f6",
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: "white",
+        },
+      });
+    } else {
+      userMarkerRef.current.setPosition(position);
+      userMarkerRef.current.setTitle(isSpoofed ? "Spoofed Location" : "Real Location");
+      userMarkerRef.current.setIcon({
+        path: isSpoofed 
+          ? google.maps.SymbolPath.FORWARD_CLOSED_ARROW 
+          : google.maps.SymbolPath.CIRCLE,
+        scale: isSpoofed ? 6 : 8,
+        fillColor: "#3b82f6",
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: "white",
+      });
+    }
+  }, [currentLocation, realLocation, map]);
 
   // Update Markers & Polyline when waypoints change
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   MapControlsOverlay, 
   RouteSettingsModal 
@@ -10,6 +10,8 @@ import { useMap } from "./providers/MapProvider";
 function App() {
   const { 
     isActive, 
+    currentLocation,
+    realLocation,
     waypoints, 
     addWaypoint, 
     clearWaypoints, 
@@ -22,13 +24,25 @@ function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Default values from legacy project
+  const DEFAULT_CENTER = { lat: 35.0, lng: 39.0 };
+  const DEFAULT_ZOOM = 6.2;
+
+  // Initial Position Logic: If realLocation is available, center on it. Otherwise, use DEFAULT.
+  useEffect(() => {
+    if (map && realLocation && !isActive && waypoints.length === 0) {
+      map.panTo({ lat: realLocation.lat, lng: realLocation.lng });
+      map.setZoom(15);
+    }
+  }, [map, realLocation, isActive, waypoints.length]);
+
   return (
     <div className="h-screen w-screen bg-zinc-950 overflow-hidden relative">
       {/* Real Map Surface */}
       <div className="absolute inset-0">
         <GoogleMap 
-          center={{ lat: 33.5138, lng: 36.2765 }} // Default center (e.g., Damascus)
-          zoom={15}
+          center={DEFAULT_CENTER}
+          zoom={DEFAULT_ZOOM}
           onMapClick={(lat, lng) => !isActive && addWaypoint(lat, lng)}
         />
       </div>
@@ -47,8 +61,15 @@ function App() {
         }}
         onRecenter={() => {
           if (map) {
-            map.panTo({ lat: 33.5138, lng: 36.2765 });
-            map.setZoom(15);
+            // Priority: 1. Spoofed Location, 2. Real Location, 3. Legacy Default
+            const target = currentLocation 
+              ? { lat: currentLocation.lat, lng: currentLocation.lng }
+              : realLocation
+              ? { lat: realLocation.lat, lng: realLocation.lng }
+              : DEFAULT_CENTER;
+            
+            map.panTo(target);
+            map.setZoom((currentLocation || realLocation) ? 15 : DEFAULT_ZOOM);
           }
         }}
         onClear={clearWaypoints}
