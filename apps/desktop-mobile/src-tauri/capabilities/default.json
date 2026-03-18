@@ -6,6 +6,7 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "vloc-os-mock:default"
   ]
 }
