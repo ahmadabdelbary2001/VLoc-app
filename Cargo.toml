@@ -12,3 +12,4 @@ opt-level = 1
 panic = "abort"
 lto = true
 opt-level = "s"
+strip = true

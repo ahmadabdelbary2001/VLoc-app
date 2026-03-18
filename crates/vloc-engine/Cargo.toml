@@ -2,7 +2,7 @@
 name = "vloc-engine"
 version = "0.1.0"
 edition = "2021"
-authors = ["Ahmad <vloc@vloc.local>"]
+authors = ["Ahmad Abdelbary"]
 description = "Pure math/simulation logic for GPS"
 license = "GPL-3.0-or-later"
 

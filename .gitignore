@@ -1,5 +1,6 @@
 # dependencies
 node_modules/
+.turbo/
 target/
 
 # build outputs
@@ -10,12 +11,28 @@ coverage/
 
 # Tauri
 src-tauri/target/
-src-tauri/gen/
+# Android / Mobile specific
+src-tauri/gen/**/build/
+src-tauri/gen/**/.gradle/
+src-tauri/gen/**/local.properties
+src-tauri/gen/**/.idea/
+src-tauri/gen/**/*.iml
+src-tauri/gen/**/.cxx/
+src-tauri/gen/**/.externalNativeBuild/
+src-tauri/gen/**/captures/
+src-tauri/gen/**/google-services.json
+src-tauri/gen/**/*.keystore
+src-tauri/gen/**/*.jks
+src-tauri/gen/**/*.p12
+src-tauri/gen/**/*.pem
 
 # Misc
 .env
 .env.local
 .DS_Store
 *.log
+.idea/
+.vscode/
+*.iml
 
 *storybook.log

@@ -1,10 +1,14 @@
 {
   "name": "vloc-monorepo",
+  "author": "Ahmad Abdelbary",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "start": "pnpm --filter @vloc/desktop tauri dev",
+    "tauri": "pnpm --filter @vloc/desktop tauri",
+    "android:dev": "pnpm --filter @vloc/desktop tauri android dev",
+    "android:build": "pnpm --filter @vloc/desktop tauri android build",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test",
