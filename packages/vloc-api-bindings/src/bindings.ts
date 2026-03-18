@@ -7,21 +7,19 @@
  * We use f64 for high-precision GPS coordinate storage.
  */
 export type Coordinates = { lat: number; lng: number; altitude: number | null }
-
-export type EndOfRouteBehavior = "stop" | "restart" | "reverse";
-
 /**
  * Defines a planned path for simulation.
  * 
  * **Why**: Houses the waypoint collection and loop settings required by the Simulator.
  */
 export type Route = { waypoints: Coordinates[]; end_behavior: EndOfRouteBehavior }
+export type EndOfRouteBehavior = "stop" | "restart" | "reverse"
 /**
  * Encapsulates the complete status of the spoofing engine at a point in time.
  * 
  * **Why**: This is the primary data structure synced between Rust and the React UI.
  */
-export type SpoofingState = { is_active: boolean; current_location: Coordinates | null; current_speed_kmh: number; remaining_distance_meters: number | null }
+export type SpoofingState = { is_active: boolean; current_location: Coordinates | null; current_speed_kmh: number; remaining_distance_meters: number | null; inaccuracy_meters: number }
 /**
  * Core domain errors for the VLoc simulation engine.
  * 
@@ -53,8 +51,8 @@ import { invoke } from "@tauri-apps/api/core";
  */
 export const commands = {
   /** Starts the spoofing simulation. */
-  async start_route(route: Route, speed_kmh: number): Promise<void> {
-    return await invoke("start_route", { route, speedKmh: speed_kmh });
+  async start_route(route: Route, speed_kmh: number, inaccuracy_meters: number): Promise<void> {
+    return await invoke("start_route", { route, speedKmh: speed_kmh, inaccuracyMeters: inaccuracy_meters });
   },
   /** Stops the active spoofing simulation. */
   async stop_route(): Promise<void> {

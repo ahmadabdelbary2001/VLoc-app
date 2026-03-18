@@ -58,4 +58,5 @@ pub struct SpoofingState {
     pub current_location: Option<Coordinates>,
     pub current_speed_kmh: f32,
     pub remaining_distance_meters: Option<f64>,
+    pub inaccuracy_meters: f32,
 }

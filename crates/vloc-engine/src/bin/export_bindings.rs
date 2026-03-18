@@ -1,7 +1,7 @@
 use specta_typescript as ts;
 use std::path::Path;
 use vloc_engine::error::EngineError;
-use vloc_engine::models::{Coordinates, Route, SpoofingState};
+use vloc_engine::models::{Coordinates, Route, SpoofingState, EndOfRouteBehavior};
 
 fn main() {
     let out_dir = Path::new("../../packages/vloc-api-bindings/src");
@@ -15,6 +15,8 @@ fn main() {
     bindings.push_str(&ts::export::<Coordinates>(&Default::default()).unwrap());
     bindings.push_str("\n");
     bindings.push_str(&ts::export::<Route>(&Default::default()).unwrap());
+    bindings.push_str("\n");
+    bindings.push_str(&ts::export::<EndOfRouteBehavior>(&Default::default()).unwrap());
     bindings.push_str("\n");
     bindings.push_str(&ts::export::<SpoofingState>(&Default::default()).unwrap());
     bindings.push_str("\n");
@@ -31,8 +33,8 @@ import { invoke } from "@tauri-apps/api/core";
  */
 export const commands = {
   /** Starts the spoofing simulation. */
-  async start_route(route: Route, speed_kmh: number): Promise<void> {
-    return await invoke("start_route", { route, speedKmh: speed_kmh });
+  async start_route(route: Route, speed_kmh: number, inaccuracy_meters: number): Promise<void> {
+    return await invoke("start_route", { route, speedKmh: speed_kmh, inaccuracyMeters: inaccuracy_meters });
   },
   /** Stops the active spoofing simulation. */
   async stop_route(): Promise<void> {

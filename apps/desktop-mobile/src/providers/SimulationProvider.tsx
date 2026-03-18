@@ -79,7 +79,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     try {
-      await engine.startSimulation(route, settings.speed);
+      await engine.startSimulation(route, settings.speed, settings.inaccuracy || 0);
       setIsActive(true);
     } catch (e) {
       console.error("Simulation start failed:", e);
