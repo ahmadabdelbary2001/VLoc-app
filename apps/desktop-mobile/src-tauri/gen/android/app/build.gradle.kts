@@ -64,6 +64,16 @@ android {
         abortOnError = false
         checkReleaseBuilds = false
     }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            val abi = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
+            val name = "VLoc-${variant.versionName}-${abi}-${variant.name}.apk"
+            output.outputFileName = name
+        }
+    }
 }
 
 rust {
