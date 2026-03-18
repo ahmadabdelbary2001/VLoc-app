@@ -15,7 +15,7 @@ export default meta;
 type Story = StoryObj<typeof SpeedPresetSelector>;
 
 export const Default: Story = {
-	render: (args) => {
+	render: (args: any) => {
 		const [mode, setMode] = useState<"walk" | "bike" | "drive">("walk");
 		return (
 			<div className="w-80">
