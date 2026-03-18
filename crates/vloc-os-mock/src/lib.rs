@@ -18,55 +18,112 @@ struct UpdateLocationArgs {
     lng: f32,
 }
 
-#[tauri::command]
-fn start_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+/// Public API to start OS-level mocking.
+pub fn start_os_mock<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
+        use tauri::Manager;
         app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("startMock", ())
             .map_err(|e| e.to_string())?;
     }
-    #[cfg(not(target_os = "android"))]
+    #[cfg(target_os = "windows")]
     {
-        println!("OS Mocking Started (Desktop Placeholder)");
+        use windows::Devices::Geolocation::Provider::GeolocationProvider;
+        let _ = GeolocationProvider::new().map_err(|e: windows::core::Error| {
+            format!("Failed to access GeolocationProvider: {}", e)
+        })?;
+        println!("Windows Geolocation Provider initialized.");
+    }
+    #[cfg(not(any(target_os = "android", target_os = "windows")))]
+    {
+        println!("OS Mocking Started (Unsupported OS Placeholder)");
     }
     Ok(())
 }
 
-#[tauri::command]
-fn update_mock_location<R: Runtime>(app: AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
+/// Public API to update OS-level mock location.
+pub fn update_os_mock<R: Runtime>(app: &AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
+        use tauri::Manager;
         app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("updateLocation", UpdateLocationArgs { lat, lng })
             .map_err(|e| e.to_string())?;
     }
-    #[cfg(not(target_os = "android"))]
+    #[cfg(target_os = "windows")]
     {
-        println!("OS Mocking Updated: {}, {} (Desktop Placeholder)", lat, lng);
+        use windows::Devices::Geolocation::Provider::GeolocationProvider;
+        use windows::Devices::Geolocation::{BasicGeoposition, PositionSource};
+
+        let provider = GeolocationProvider::new()
+            .map_err(|e: windows::core::Error| format!("Failed to get provider: {}", e))?;
+
+        let position = BasicGeoposition {
+            Latitude: lat as f64,
+            Longitude: lng as f64,
+            Altitude: 0.0,
+        };
+
+        provider
+            .SetOverridePosition(position, PositionSource::Unknown, 10.0)
+            .map_err(|e: windows::core::Error| format!("Windows Mocking failed: {}", e))?;
+    }
+    #[cfg(not(any(target_os = "android", target_os = "windows")))]
+    {
+        println!(
+            "OS Mocking Updated: {}, {} (Unsupported OS Placeholder)",
+            lat, lng
+        );
     }
     Ok(())
 }
 
-#[tauri::command]
-fn stop_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+/// Public API to stop OS-level mocking.
+pub fn stop_os_mock<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
+        use tauri::Manager;
         app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("stopMock", ())
             .map_err(|e| e.to_string())?;
     }
-    #[cfg(not(target_os = "android"))]
+    #[cfg(target_os = "windows")]
     {
-        println!("OS Mocking Stopped (Desktop Placeholder)");
+        use windows::Devices::Geolocation::Provider::GeolocationProvider;
+        let provider = GeolocationProvider::new()
+            .map_err(|e: windows::core::Error| format!("Failed to get provider: {}", e))?;
+        provider
+            .ClearOverridePosition()
+            .map_err(|e: windows::core::Error| e.to_string())?;
+        println!("Windows Geolocation Override Cleared.");
+    }
+    #[cfg(not(any(target_os = "android", target_os = "windows")))]
+    {
+        println!("OS Mocking Stopped (Unsupported OS Placeholder)");
     }
     Ok(())
+}
+
+#[tauri::command]
+fn start_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    start_os_mock(&app)
+}
+
+#[tauri::command]
+fn update_mock_location<R: Runtime>(app: AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
+    update_os_mock(&app, lat, lng)
+}
+
+#[tauri::command]
+fn stop_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    stop_os_mock(&app)
 }
 
 /// Initializes the plugin.
@@ -77,11 +134,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             update_mock_location,
             stop_mock
         ])
-        .setup(|app, api| {
+        .setup(|_app, _api| {
             #[cfg(target_os = "android")]
             {
                 // Register the mobile plugin
-                let _ = api.register_android_plugin(PLUGIN_IDENTIFIER, "MockLocationPlugin");
+                let _ = _api.register_android_plugin(PLUGIN_IDENTIFIER, "MockLocationPlugin");
             }
             Ok(())
         })

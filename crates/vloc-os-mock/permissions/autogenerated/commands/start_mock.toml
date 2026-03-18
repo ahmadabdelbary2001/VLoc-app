@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-start-mock"
+description = "Enables the start_mock command without any pre-configured scope."
+commands.allow = ["start_mock"]
+
+[[permission]]
+identifier = "deny-start-mock"
+description = "Denies the start_mock command without any pre-configured scope."
+commands.deny = ["start_mock"]

@@ -1,0 +1,8 @@
+{
+  "identifier": "allow-start-mock",
+  "description": "Allows starting the location mock",
+  "commands": {
+    "allow": ["start_mock"],
+    "deny": []
+  }
+}

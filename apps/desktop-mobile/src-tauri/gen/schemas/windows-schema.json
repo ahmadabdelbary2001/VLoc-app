@@ -2161,6 +2161,42 @@
           "type": "string",
           "const": "log:deny-log",
           "markdownDescription": "Denies the log command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the start_mock command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:allow-start-mock",
+          "markdownDescription": "Enables the start_mock command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the stop_mock command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:allow-stop-mock",
+          "markdownDescription": "Enables the stop_mock command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the update_mock_location command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:allow-update-mock-location",
+          "markdownDescription": "Enables the update_mock_location command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the start_mock command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:deny-start-mock",
+          "markdownDescription": "Denies the start_mock command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the stop_mock command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:deny-stop-mock",
+          "markdownDescription": "Denies the stop_mock command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the update_mock_location command without any pre-configured scope.",
+          "type": "string",
+          "const": "vloc-os-mock:deny-update-mock-location",
+          "markdownDescription": "Denies the update_mock_location command without any pre-configured scope."
         }
       ]
     },

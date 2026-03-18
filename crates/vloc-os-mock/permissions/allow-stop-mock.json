@@ -1,0 +1,8 @@
+{
+  "identifier": "allow-stop-mock",
+  "description": "Allows stopping the location mock",
+  "commands": {
+    "allow": ["stop_mock"],
+    "deny": []
+  }
+}

@@ -1,7 +1,7 @@
 mod commands;
+use commands::AppState;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use commands::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,6 +19,7 @@ pub fn run() {
             commands::get_current_state
         ])
         .setup(move |app| {
+            let app_handle = app.handle().clone();
             // Background Simulation Loop (10Hz)
             tauri::async_runtime::spawn(async move {
                 let mut last_tick = Instant::now();
@@ -30,7 +31,14 @@ pub fn run() {
 
                     let mut sim_lock = simulator_clone.lock().unwrap();
                     if let Some(sim) = sim_lock.as_mut() {
-                        sim.tick(delta);
+                        if let Some(coord) = sim.tick(delta) {
+                            // Update OS Mocking at 10Hz
+                            let _ = tauri_plugin_vloc_os_mock::update_os_mock(
+                                &app_handle,
+                                coord.lat as f32,
+                                coord.lng as f32,
+                            );
+                        }
                     }
                 }
             });

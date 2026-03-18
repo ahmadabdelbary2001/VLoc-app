@@ -1,0 +1,8 @@
+{
+  "identifier": "allow-update-mock-location",
+  "description": "Allows updating the mock location",
+  "commands": {
+    "allow": ["update_mock_location"],
+    "deny": []
+  }
+}

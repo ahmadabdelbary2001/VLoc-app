@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-update-mock-location"
+description = "Enables the update_mock_location command without any pre-configured scope."
+commands.allow = ["update_mock_location"]
+
+[[permission]]
+identifier = "deny-update-mock-location"
+description = "Denies the update_mock_location command without any pre-configured scope."
+commands.deny = ["update_mock_location"]
