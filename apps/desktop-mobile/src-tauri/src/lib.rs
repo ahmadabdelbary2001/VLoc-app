@@ -12,6 +12,7 @@ pub fn run() {
         .manage(AppState {
             simulator: simulator_state,
         })
+        .plugin(tauri_plugin_vloc_os_mock::init())
         .invoke_handler(tauri::generate_handler![
             commands::start_route,
             commands::stop_route,

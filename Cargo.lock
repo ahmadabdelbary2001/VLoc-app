@@ -93,6 +93,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-log",
+ "tauri-plugin-vloc-os-mock",
  "tokio",
  "vloc-engine",
 ]
@@ -3753,6 +3754,15 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.18",
  "time",
+]
+
+[[package]]
+name = "tauri-plugin-vloc-os-mock"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "vloc-engine",
 ]
 
 [[package]]
