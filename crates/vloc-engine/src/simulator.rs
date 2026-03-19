@@ -40,6 +40,7 @@ impl Simulator {
                 is_active: false,
                 current_location,
                 current_speed_kmh: initial_speed_kmh,
+                bearing: 0.0,
                 remaining_distance_meters: None,
                 inaccuracy_meters,
             },
@@ -147,6 +148,7 @@ impl Simulator {
                 self.current_waypoint_idx = next_idx;
             } else {
                 let bearing = calculate_bearing(&current_loc, next_waypoint);
+                self.state.bearing = bearing as f32;
                 current_loc = calculate_destination(&current_loc, distance_travel_m, bearing);
                 distance_travel_m = 0.0;
             }

@@ -32,11 +32,14 @@ pub fn run() {
                     let mut sim_lock = simulator_clone.lock().unwrap();
                     if let Some(sim) = sim_lock.as_mut() {
                         if let Some(coord) = sim.tick(delta) {
-                            // Update OS Mocking at 10Hz
+                            let state = sim.get_state();
+                            // Update OS Mocking at 10Hz with advanced fields
                             let _ = tauri_plugin_vloc_os_mock::update_os_mock(
                                 &app_handle,
-                                coord.lat as f32,
-                                coord.lng as f32,
+                                coord.lat,
+                                coord.lng,
+                                state.current_speed_kmh / 3.6, // Convert km/h to m/s
+                                state.bearing,
                             );
                         }
                     }

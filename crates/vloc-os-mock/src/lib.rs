@@ -14,8 +14,10 @@ pub struct MockConfig {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct UpdateLocationArgs {
-    pub lat: f32,
-    pub lng: f32,
+    pub lat: f64,
+    pub lng: f64,
+    pub speed: f32,
+    pub bearing: f32,
 }
 
 /// Public API to start OS-level mocking.
@@ -38,12 +40,26 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
 }
 
 /// Public API to update OS-level mock location.
-pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
+pub fn update_os_mock<R: Runtime>(
+    _app: &AppHandle<R>,
+    lat: f64,
+    lng: f64,
+    _speed: f32,
+    _bearing: f32,
+) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
         use tauri::Emitter;
-        _app.emit("vloc-os-mock://update", UpdateLocationArgs { lat, lng })
-            .map_err(|e| e.to_string())?;
+        _app.emit(
+            "vloc-os-mock://update",
+            UpdateLocationArgs {
+                lat,
+                lng,
+                speed: _speed,
+                bearing: _bearing,
+            },
+        )
+        .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "windows")]
     {
@@ -54,8 +70,8 @@ pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Re
             .map_err(|e: windows::core::Error| format!("Failed to get provider: {}", e))?;
 
         let position = BasicGeoposition {
-            Latitude: lat as f64,
-            Longitude: lng as f64,
+            Latitude: lat,
+            Longitude: lng,
             Altitude: 0.0,
         };
 
@@ -93,8 +109,14 @@ fn start_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn update_mock_location<R: Runtime>(app: AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
-    update_os_mock(&app, lat, lng)
+fn update_mock_location<R: Runtime>(
+    app: AppHandle<R>,
+    lat: f64,
+    lng: f64,
+    _speed: f32,
+    _bearing: f32,
+) -> Result<(), String> {
+    update_os_mock(&app, lat, lng, _speed, _bearing)
 }
 
 #[tauri::command]
@@ -113,9 +135,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|_app, _api| {
             #[cfg(target_os = "android")]
             {
-                // Register the mobile plugin with full class path
-                let _ =
-                    _api.register_android_plugin("vloc-os-mock", "com.vloc.app.MockLocationPlugin");
+                // Register the mobile plugin - Tauri 2 convention:
+                // If plugin name is "vloc-os-mock", looks for "app.tauri.vloc_os_mock.MockLocationPlugin"
+                let _ = _api.register_android_plugin("vloc-os-mock", "MockLocationPlugin");
             }
             Ok(())
         })

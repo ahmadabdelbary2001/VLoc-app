@@ -57,6 +57,7 @@ pub struct SpoofingState {
     pub is_active: bool,
     pub current_location: Option<Coordinates>,
     pub current_speed_kmh: f32,
+    pub bearing: f32,
     pub remaining_distance_meters: Option<f64>,
     pub inaccuracy_meters: f32,
 }
@@ -67,6 +68,7 @@ impl Default for SpoofingState {
             is_active: false,
             current_location: None,
             current_speed_kmh: 0.0,
+            bearing: 0.0,
             remaining_distance_meters: None,
             inaccuracy_meters: 0.0,
         }
