@@ -5,29 +5,25 @@ use tauri::{
 };
 
 #[cfg(target_os = "android")]
-const PLUGIN_IDENTIFIER: &str = "com.vloc.app";
+const PLUGIN_IDENTIFIER: &str = "vloc-os-mock";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MockConfig {
     pub enabled: bool,
 }
 
-#[cfg(target_os = "android")]
-#[derive(Debug, Serialize, Deserialize)]
-struct UpdateLocationArgs {
-    lat: f32,
-    lng: f32,
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+pub struct UpdateLocationArgs {
+    pub lat: f32,
+    pub lng: f32,
 }
 
 /// Public API to start OS-level mocking.
 pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Manager;
-        _app.plugin_manager()
-            .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
-            .map_err(|e| e.to_string())?
-            .run_mobile_plugin("startMock", ())
+        use tauri::Emitter;
+        _app.emit("vloc-os-mock://start", ())
             .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "windows")]
@@ -38,10 +34,6 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
         })?;
         println!("Windows Geolocation Provider initialized.");
     }
-    #[cfg(not(any(target_os = "android", target_os = "windows")))]
-    {
-        println!("OS Mocking Started (Unsupported OS Placeholder)");
-    }
     Ok(())
 }
 
@@ -49,11 +41,8 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
 pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Manager;
-        _app.plugin_manager()
-            .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
-            .map_err(|e| e.to_string())?
-            .run_mobile_plugin("updateLocation", UpdateLocationArgs { lat, lng })
+        use tauri::Emitter;
+        _app.emit("vloc-os-mock://update", UpdateLocationArgs { lat, lng })
             .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "windows")]
@@ -74,13 +63,6 @@ pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Re
             .SetOverridePosition(position, PositionSource::Unknown, 10.0)
             .map_err(|e: windows::core::Error| format!("Windows Mocking failed: {}", e))?;
     }
-    #[cfg(not(any(target_os = "android", target_os = "windows")))]
-    {
-        println!(
-            "OS Mocking Updated: {}, {} (Unsupported OS Placeholder)",
-            lat, lng
-        );
-    }
     Ok(())
 }
 
@@ -88,11 +70,8 @@ pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Re
 pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Manager;
-        _app.plugin_manager()
-            .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
-            .map_err(|e| e.to_string())?
-            .run_mobile_plugin("stopMock", ())
+        use tauri::Emitter;
+        _app.emit("vloc-os-mock://stop", ())
             .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "windows")]
@@ -104,10 +83,6 @@ pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
             .ClearOverridePosition()
             .map_err(|e: windows::core::Error| e.to_string())?;
         println!("Windows Geolocation Override Cleared.");
-    }
-    #[cfg(not(any(target_os = "android", target_os = "windows")))]
-    {
-        println!("OS Mocking Stopped (Unsupported OS Placeholder)");
     }
     Ok(())
 }
@@ -138,8 +113,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|_app, _api| {
             #[cfg(target_os = "android")]
             {
-                // Register the mobile plugin
-                let _ = _api.register_android_plugin(PLUGIN_IDENTIFIER, "MockLocationPlugin");
+                // Register the mobile plugin with full class path
+                let _ =
+                    _api.register_android_plugin("vloc-os-mock", "com.vloc.app.MockLocationPlugin");
             }
             Ok(())
         })

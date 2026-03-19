@@ -2,7 +2,7 @@
 
 VLoc is a cross-platform, high-performance GPS spoofer and virtual location tool. Designed from the ground up to be modular, it relies on a robust Monorepo architecture to unify development across platforms.
 
-**Author**: Ahmad Abdelbary
+**Current Version**: `1.0.0`
 
 ## 🚀 Key Features (v0.1.0)
 - **Multi-Platform**: Windows (MSI/EXE) and Android (APK) ready.

@@ -20,6 +20,17 @@ class MockLocationPlugin(private val activity: Activity) : Plugin(activity) {
     override fun load(webapp: Any) {
         super.load(webapp)
         locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        // Listen for events from Rust to bypass feature-merging issues
+        app.listen("vloc-os-mock://start") {
+            startMock(Invoke(it.id, it.payload, null))
+        }
+        app.listen("vloc-os-mock://update") {
+            updateLocation(Invoke(it.id, it.payload, null))
+        }
+        app.listen("vloc-os-mock://stop") {
+            stopMock(Invoke(it.id, it.payload, null))
+        }
     }
 
     @Command

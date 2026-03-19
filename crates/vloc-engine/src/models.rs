@@ -60,3 +60,70 @@ pub struct SpoofingState {
     pub remaining_distance_meters: Option<f64>,
     pub inaccuracy_meters: f32,
 }
+
+impl Default for SpoofingState {
+    fn default() -> Self {
+        Self {
+            is_active: false,
+            current_location: None,
+            current_speed_kmh: 0.0,
+            remaining_distance_meters: None,
+            inaccuracy_meters: 0.0,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_coordinates() {
+        let coord = Coordinates::new(45.0, -90.0);
+        assert!(coord.is_ok());
+        let c = coord.unwrap();
+        assert_eq!(c.lat, 45.0);
+        assert_eq!(c.lng, -90.0);
+        assert_eq!(c.altitude, None);
+    }
+
+    #[test]
+    fn test_invalid_latitude_extreme() {
+        let coord = Coordinates::new(95.0, 0.0);
+        assert!(coord.is_err());
+        match coord.unwrap_err() {
+            EngineError::InvalidCoordinate(msg) => {
+                assert!(msg.contains("Latitude must be between -90 and 90"));
+            }
+            _ => panic!("Expected InvalidCoordinate error"),
+        }
+    }
+
+    #[test]
+    fn test_invalid_longitude_extreme() {
+        let coord = Coordinates::new(0.0, -181.0);
+        assert!(coord.is_err());
+        match coord.unwrap_err() {
+            EngineError::InvalidCoordinate(msg) => {
+                assert!(msg.contains("Longitude must be between -180 and 180"));
+            }
+            _ => panic!("Expected InvalidCoordinate error"),
+        }
+    }
+
+    #[test]
+    fn test_coordinates_with_altitude() {
+        let coord = Coordinates::new(10.0, 20.0).unwrap().with_altitude(150.5);
+        assert_eq!(coord.altitude, Some(150.5));
+    }
+
+    #[test]
+    fn test_spoofing_state_default() {
+        let state = SpoofingState::default();
+        assert_eq!(state.is_active, false);
+        assert_eq!(state.current_location, None);
+        assert_eq!(state.current_speed_kmh, 0.0);
+        assert_eq!(state.remaining_distance_meters, None);
+        assert_eq!(state.inaccuracy_meters, 0.0);
+    }
+}

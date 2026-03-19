@@ -48,12 +48,6 @@ pub fn get_current_state(state: State<'_, AppState>) -> Result<SpoofingState, St
     if let Some(sim) = sim_lock.as_ref() {
         Ok(sim.get_state().clone())
     } else {
-        Ok(SpoofingState {
-            is_active: false,
-            current_location: None,
-            current_speed_kmh: 0.0,
-            remaining_distance_meters: None,
-            inaccuracy_meters: 0.0,
-        })
+        Ok(SpoofingState::default())
     }
 }

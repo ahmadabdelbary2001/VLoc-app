@@ -17,7 +17,7 @@ pub enum EngineError {
     InvalidSpeed,
 
     /// Insufficient waypoints to calculate a path.
-    #[error("Route must contain at least two waypoints")]
+    #[error("Route must contain at least one waypoint")]
     InvalidRoute,
 
     /// General failure in starting the simulation environment.
