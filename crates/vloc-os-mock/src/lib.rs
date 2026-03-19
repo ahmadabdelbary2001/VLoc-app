@@ -12,6 +12,7 @@ pub struct MockConfig {
     pub enabled: bool,
 }
 
+#[cfg(target_os = "android")]
 #[derive(Debug, Serialize, Deserialize)]
 struct UpdateLocationArgs {
     lat: f32,
@@ -19,11 +20,11 @@ struct UpdateLocationArgs {
 }
 
 /// Public API to start OS-level mocking.
-pub fn start_os_mock<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
         use tauri::Manager;
-        app.plugin_manager()
+        _app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("startMock", ())
@@ -45,11 +46,11 @@ pub fn start_os_mock<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
 }
 
 /// Public API to update OS-level mock location.
-pub fn update_os_mock<R: Runtime>(app: &AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
+pub fn update_os_mock<R: Runtime>(_app: &AppHandle<R>, lat: f32, lng: f32) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
         use tauri::Manager;
-        app.plugin_manager()
+        _app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("updateLocation", UpdateLocationArgs { lat, lng })
@@ -84,11 +85,11 @@ pub fn update_os_mock<R: Runtime>(app: &AppHandle<R>, lat: f32, lng: f32) -> Res
 }
 
 /// Public API to stop OS-level mocking.
-pub fn stop_os_mock<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
         use tauri::Manager;
-        app.plugin_manager()
+        _app.plugin_manager()
             .get_mobile_plugin::<R>(PLUGIN_IDENTIFIER)
             .map_err(|e| e.to_string())?
             .run_mobile_plugin("stopMock", ())
