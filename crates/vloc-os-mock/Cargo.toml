@@ -14,6 +14,10 @@ tauri = { workspace = true }
 serde = { workspace = true }
 vloc-engine = { path = "../vloc-engine" }
 
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+ndk-context = "0.1"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.61.3", features = [
     "Devices_Geolocation",

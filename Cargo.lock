@@ -3760,6 +3760,8 @@ dependencies = [
 name = "tauri-plugin-vloc-os-mock"
 version = "1.0.0"
 dependencies = [
+ "jni",
+ "ndk-context",
  "serde",
  "tauri",
  "tauri-plugin",

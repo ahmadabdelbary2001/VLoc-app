@@ -5,7 +5,10 @@ use tauri::{
 };
 
 #[cfg(target_os = "android")]
-const PLUGIN_IDENTIFIER: &str = "vloc-os-mock";
+use jni::{
+    objects::{JObject, JValue},
+    JavaVM, JNIEnv,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MockConfig {
@@ -20,12 +23,75 @@ pub struct UpdateLocationArgs {
     pub bearing: f32,
 }
 
+#[cfg(target_os = "android")]
+fn get_env(jvm: &JavaVM) -> Result<JNIEnv, String> {
+    jvm.attach_current_thread_as_daemon()
+        .map_err(|e| format!("Failed to attach thread: {}", e))
+}
+
+#[cfg(target_os = "android")]
+fn get_context<'a>(env: &mut JNIEnv<'a>) -> Result<JObject<'a>, String> {
+    let context_ptr = ndk_context::android_context().context();
+    if context_ptr.is_null() {
+        return Err("Android context is null".to_string());
+    }
+    unsafe { Ok(JObject::from_raw(context_ptr as jni::sys::jobject)) }
+}
+
 /// Public API to start OS-level mocking.
 pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Emitter;
-        _app.emit("vloc-os-mock://start", ())
+        let jvm = unsafe { JavaVM::from_raw(ndk_context::android_context().vm() as *mut jni::sys::JavaVM) }
+            .map_err(|e| e.to_string())?;
+        let mut env = get_env(&jvm)?;
+        let context = get_context(&mut env)?;
+
+        // Get LocationManager
+        let lm_service_name = env.new_string("location").map_err(|e| e.to_string())?;
+        let lm = env
+            .call_method(
+                &context,
+                "getSystemService",
+                "(Ljava/lang/String;)Ljava/lang/Object;",
+                &[JValue::Object(lm_service_name.as_ref())],
+            )
+            .map_err(|e| e.to_string())?
+            .l()
+            .map_err(|e| e.to_string())?;
+
+        if lm.is_null() {
+            return Err("Failed to get LocationManager".to_string());
+        }
+
+        let provider_name = env.new_string("gps").map_err(|e| e.to_string())?;
+
+        // Try remove first
+        let _ = env.call_method(&lm, "removeTestProvider", "(Ljava/lang/String;)V", &[JValue::Object(provider_name.as_ref())]);
+
+        // addTestProvider(String name, boolean requiresNetwork, boolean requiresSatellite, boolean requiresCell, 
+        // boolean hasMonetaryCost, boolean supportsAltitude, boolean supportsSpeed, boolean supportsBearing, 
+        // int powerRequirement, int accuracy)
+        env.call_method(
+            &lm,
+            "addTestProvider",
+            "(Ljava/lang/String;ZZZZZZZII)V",
+            &[
+                JValue::Object(provider_name.as_ref()),
+                JValue::Bool(0), // requiresNetwork
+                JValue::Bool(0), // requiresSatellite
+                JValue::Bool(0), // requiresCell
+                JValue::Bool(0), // hasMonetaryCost
+                JValue::Bool(1), // supportsAltitude
+                JValue::Bool(1), // supportsSpeed
+                JValue::Bool(1), // supportsBearing
+                JValue::Int(1),  // powerRequirement (POWER_LOW)
+                JValue::Int(1),  // accuracy (ACCURACY_FINE)
+            ],
+        )
+        .map_err(|e| format!("addTestProvider failed: {}", e))?;
+
+        env.call_method(&lm, "setTestProviderEnabled", "(Ljava/lang/String;Z)V", &[JValue::Object(provider_name.as_ref()), JValue::Bool(1)])
             .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "windows")]
@@ -34,7 +100,6 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
         let _ = GeolocationProvider::new().map_err(|e: windows::core::Error| {
             format!("Failed to access GeolocationProvider: {}", e)
         })?;
-        println!("Windows Geolocation Provider initialized.");
     }
     Ok(())
 }
@@ -44,22 +109,51 @@ pub fn update_os_mock<R: Runtime>(
     _app: &AppHandle<R>,
     lat: f64,
     lng: f64,
-    _speed: f32,
-    _bearing: f32,
+    speed: f32,
+    bearing: f32,
 ) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Emitter;
-        _app.emit(
-            "vloc-os-mock://update",
-            UpdateLocationArgs {
-                lat,
-                lng,
-                speed: _speed,
-                bearing: _bearing,
-            },
-        )
-        .map_err(|e| e.to_string())?;
+        let jvm = unsafe { JavaVM::from_raw(ndk_context::android_context().vm() as *mut jni::sys::JavaVM) }
+            .map_err(|e| e.to_string())?;
+        let mut env = get_env(&jvm)?;
+        let context = get_context(&mut env)?;
+
+        let lm_service_name = env.new_string("location").map_err(|e| e.to_string())?;
+        let lm = env
+            .call_method(&context, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", &[JValue::Object(lm_service_name.as_ref())])
+            .map_err(|e| e.to_string())?.l().map_err(|e| e.to_string())?;
+
+        let provider_name = env.new_string("gps").map_err(|e| e.to_string())?;
+        
+        // Create Location object
+        let location_class = env.find_class("android/location/Location").map_err(|e| e.to_string())?;
+        let location = env.new_object(&location_class, "(Ljava/lang/String;)V", &[JValue::Object(provider_name.as_ref())])
+            .map_err(|e| e.to_string())?;
+
+        env.call_method(&location, "setLatitude", "(D)V", &[JValue::Double(lat)]).map_err(|e| e.to_string())?;
+        env.call_method(&location, "setLongitude", "(D)V", &[JValue::Double(lng)]).map_err(|e| e.to_string())?;
+        env.call_method(&location, "setAltitude", "(D)V", &[JValue::Double(0.0)]).map_err(|e| e.to_string())?;
+        
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as i64;
+        env.call_method(&location, "setTime", "(J)V", &[JValue::Long(now)]).map_err(|e| e.to_string())?;
+        env.call_method(&location, "setAccuracy", "(F)V", &[JValue::Float(1.0)]).map_err(|e| e.to_string())?;
+        env.call_method(&location, "setSpeed", "(F)V", &[JValue::Float(speed)]).map_err(|e| e.to_string())?;
+        env.call_method(&location, "setBearing", "(F)V", &[JValue::Float(bearing)]).map_err(|e| e.to_string())?;
+
+        // elapsedRealtimeNanos
+        let system_clock_class = env.find_class("android/os/SystemClock").map_err(|e| e.to_string())?;
+        let elapsed_nanos = env.call_static_method(&system_clock_class, "elapsedRealtimeNanos", "()J", &[])
+            .map_err(|e| e.to_string())?
+            .j().map_err(|e| e.to_string())?;
+        env.call_method(&location, "setElapsedRealtimeNanos", "(J)V", &[JValue::Long(elapsed_nanos)]).map_err(|e| e.to_string())?;
+
+        // setTestProviderLocation
+        env.call_method(&lm, "setTestProviderLocation", "(Ljava/lang/String;Landroid/location/Location;)V", &[
+            JValue::Object(provider_name.as_ref()),
+            JValue::Object(&location),
+        ])
+        .map_err(|e| format!("setTestProviderLocation failed: {}", e))?;
     }
     #[cfg(target_os = "windows")]
     {
@@ -86,9 +180,19 @@ pub fn update_os_mock<R: Runtime>(
 pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
-        use tauri::Emitter;
-        _app.emit("vloc-os-mock://stop", ())
+        let jvm = unsafe { JavaVM::from_raw(ndk_context::android_context().vm() as *mut jni::sys::JavaVM) }
             .map_err(|e| e.to_string())?;
+        let mut env = get_env(&jvm)?;
+        let context = get_context(&mut env)?;
+
+        let lm_service_name = env.new_string("location").map_err(|e| e.to_string())?;
+        let lm = env
+            .call_method(&context, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;", &[JValue::Object(lm_service_name.as_ref())])
+            .map_err(|e| e.to_string())?.l().map_err(|e| e.to_string())?;
+
+        let provider_name = env.new_string("gps").map_err(|e| e.to_string())?;
+        let _ = env.call_method(&lm, "setTestProviderEnabled", "(Ljava/lang/String;Z)V", &[JValue::Object(provider_name.as_ref()), JValue::Bool(0)]);
+        let _ = env.call_method(&lm, "removeTestProvider", "(Ljava/lang/String;)V", &[JValue::Object(provider_name.as_ref())]);
     }
     #[cfg(target_os = "windows")]
     {
@@ -98,7 +202,6 @@ pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
         provider
             .ClearOverridePosition()
             .map_err(|e: windows::core::Error| e.to_string())?;
-        println!("Windows Geolocation Override Cleared.");
     }
     Ok(())
 }
@@ -113,15 +216,40 @@ fn update_mock_location<R: Runtime>(
     app: AppHandle<R>,
     lat: f64,
     lng: f64,
-    _speed: f32,
-    _bearing: f32,
+    speed: f32,
+    bearing: f32,
 ) -> Result<(), String> {
-    update_os_mock(&app, lat, lng, _speed, _bearing)
+    update_os_mock(&app, lat, lng, speed, bearing)
 }
 
 #[tauri::command]
 fn stop_mock<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     stop_os_mock(&app)
+}
+
+#[tauri::command]
+fn is_mock_setting_enabled<R: Runtime>(_app: AppHandle<R>) -> Result<bool, String> {
+    #[cfg(target_os = "android")]
+    {
+        let jvm = unsafe { JavaVM::from_raw(ndk_context::android_context().vm() as *mut jni::sys::JavaVM) }
+            .map_err(|e| e.to_string())?;
+        let mut env = get_env(&jvm)?;
+        let context = get_context(&mut env)?;
+        let content_resolver = env.call_method(&context, "getContentResolver", "()Landroid/content/ContentResolver;", &[])
+            .map_err(|e| e.to_string())?.l().map_err(|e| e.to_string())?;
+        let settings_secure = env.find_class("android/provider/Settings$Secure").map_err(|e| e.to_string())?;
+        let allow_mock_location = env.new_string("allow_mock_location").map_err(|e| e.to_string())?;
+        let result = env.call_static_method(&settings_secure, "getInt", "(Landroid/content/ContentResolver;Ljava/lang/String;I)I", &[
+            JValue::Object(content_resolver.as_ref()),
+            JValue::Object(allow_mock_location.as_ref()),
+            JValue::Int(0),
+        ]).map_err(|e| e.to_string())?.i().map_err(|e| e.to_string())?;
+        Ok(result != 0)
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        Ok(true)
+    }
 }
 
 /// Initializes the plugin.
@@ -130,16 +258,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             start_mock,
             update_mock_location,
-            stop_mock
+            stop_mock,
+            is_mock_setting_enabled
         ])
-        .setup(|_app, _api| {
-            #[cfg(target_os = "android")]
-            {
-                // Register the mobile plugin - Tauri 2 convention:
-                // If plugin name is "vloc-os-mock", looks for "app.tauri.vloc_os_mock.MockLocationPlugin"
-                let _ = _api.register_android_plugin("vloc-os-mock", "MockLocationPlugin");
-            }
-            Ok(())
-        })
         .build()
 }
