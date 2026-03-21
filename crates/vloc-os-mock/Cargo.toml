@@ -13,7 +13,6 @@ tauri-plugin = { version = "2.0", features = ["build"] }
 tauri = { workspace = true }
 serde = { workspace = true }
 vloc-engine = { path = "../vloc-engine" }
-windows = { version = "0.61.3", features = ["Devices_Geolocation", "Devices_Geolocation_Provider", "Foundation", "System"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"

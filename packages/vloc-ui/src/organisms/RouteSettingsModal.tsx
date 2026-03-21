@@ -146,12 +146,12 @@ export const RouteSettingsModal = ({
 						Cancel
 					</Button>
 					<Button
-						variant="success"
-						className="flex-1 gap-2 shadow-2xl shadow-emerald-500/60 border-2 border-white/20 hover:scale-[1.02] active:scale-95 transition-all opacity-100"
-						onClick={() => onPlay({ speed, inaccuracy, loopMode })}
-					>
-						<Play className="w-4 h-4 fill-current text-white" />
-						<span className="text-white font-bold tracking-tight">Launch Simulation</span>
+					variant="success"
+					className="flex-1 gap-2 shadow-2xl shadow-[#6ECFAA]/50 border-2 border-white/20 hover:scale-[1.02] active:scale-95 transition-all opacity-100"
+					onClick={() => onPlay({ speed, inaccuracy, loopMode })}
+				>
+					<Play className="w-4 h-4 fill-current" />
+					<span className="font-bold tracking-tight">Launch Simulation</span>
 					</Button>
 				</div>
 			</div>

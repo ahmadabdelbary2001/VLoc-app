@@ -28,14 +28,14 @@ export const Button = ({
 }: ButtonProps) => {
 	const variants = {
 		primary:
-			"bg-blue-600 text-white hover:bg-blue-700 opacity-100 shadow-lg shadow-blue-500/50 border-none",
+			"bg-[#6ECFAA] text-[#0F3024] hover:bg-[#3A9E78] hover:text-white opacity-100 shadow-lg shadow-[#6ECFAA]/50 border-none",
 		success:
-			"bg-emerald-600 text-white hover:bg-emerald-700 opacity-100 shadow-lg shadow-emerald-500/50 border-none",
+			"bg-[#6ECFAA] text-[#0F3024] hover:bg-[#3A9E78] hover:text-white opacity-100 shadow-lg shadow-[#6ECFAA]/60 border-none",
 		secondary: "bg-muted text-foreground hover:bg-muted/80",
 		ghost: "hover:bg-transparent text-foreground hover:bg-muted/50",
 		danger: "bg-rose-600 text-white hover:bg-rose-700 opacity-100 shadow-lg shadow-rose-500/40 border-none",
 		glass:
-			"bg-white/40 dark:bg-black/60 backdrop-blur-md border-[1.5px] border-white/60 dark:border-white/30 text-foreground dark:text-white hover:bg-white/50 dark:hover:bg-black/80 transition-all duration-300 shadow-2xl",
+			"bg-white/60 dark:bg-black/50 backdrop-blur-md border-[1.5px] border-[#6ECFAA]/30 dark:border-[#6ECFAA]/20 text-foreground dark:text-[#D6F0E8] hover:bg-white/80 dark:hover:bg-black/70 transition-all duration-300 shadow-xl",
 	};
 
 	const sizes = {
