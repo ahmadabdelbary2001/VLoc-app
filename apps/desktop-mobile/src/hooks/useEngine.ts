@@ -34,9 +34,30 @@ export const useEngine = () => {
     }
   };
 
+  const isMockAvailable = async () => {
+    try {
+      // @ts-ignore - Plugin command not in base bindings yet
+      return await commands.is_mock_setting_enabled();
+    } catch (e) {
+      console.error("Failed to check mock availability:", e);
+      return false;
+    }
+  };
+
+  const openSettings = async () => {
+    try {
+      // @ts-ignore
+      return await commands.open_location_settings();
+    } catch (e) {
+      console.error("Failed to open settings:", e);
+    }
+  };
+
   return {
     startSimulation,
     stopSimulation,
     getCurrentState,
+    isMockAvailable,
+    openSettings,
   };
 };

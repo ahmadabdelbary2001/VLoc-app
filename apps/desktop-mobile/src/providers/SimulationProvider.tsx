@@ -72,6 +72,24 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const start = useCallback(async (settings: any) => {
     if (waypoints.length < 1) return;
     
+    // Check if OS-level mocking is available/enabled
+    const isAvailable = await engine.isMockAvailable();
+    if (!isAvailable) {
+      const platform = navigator.userAgent.includes("Windows") ? "Windows" : "Mobile";
+      const message = platform === "Windows" 
+        ? "Location services are disabled or do not have sufficient permissions.\n\n" +
+          "1. Ensure 'Location services' is ON.\n" +
+          "2. Ensure 'Allow desktop apps to access your location' is ON.\n" +
+          "3. (Important) If it still fails, try running the app with 'Administrator privileges'.\n\n" +
+          "Open Settings?"
+        : "Mock Location is not enabled in Developer Options. Please enable it to proceed.";
+      
+      if (window.confirm(message)) {
+        await engine.openSettings();
+      }
+      return;
+    }
+
     // Construct the Route object expected by Rust
     const route = {
       waypoints: waypoints.map(w => ({ lat: w.lat, lng: w.lng, altitude: null })),
@@ -83,6 +101,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setIsActive(true);
     } catch (e) {
       console.error("Simulation start failed:", e);
+      alert("Failed to start simulation: " + e);
     }
   }, [waypoints, engine]);
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    AppHandle, Runtime,
+    AppHandle, Manager, Runtime,
 };
 
 #[cfg(target_os = "android")]
@@ -21,6 +21,11 @@ pub struct UpdateLocationArgs {
     pub lng: f64,
     pub speed: f32,
     pub bearing: f32,
+}
+
+#[cfg(target_os = "windows")]
+pub struct WindowsMockState {
+    pub provider: std::sync::Mutex<Option<windows::Devices::Geolocation::Provider::GeolocationProvider>>,
 }
 
 #[cfg(target_os = "android")]
@@ -69,9 +74,7 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
         // Try remove first
         let _ = env.call_method(&lm, "removeTestProvider", "(Ljava/lang/String;)V", &[JValue::Object(provider_name.as_ref())]);
 
-        // addTestProvider(String name, boolean requiresNetwork, boolean requiresSatellite, boolean requiresCell, 
-        // boolean hasMonetaryCost, boolean supportsAltitude, boolean supportsSpeed, boolean supportsBearing, 
-        // int powerRequirement, int accuracy)
+        // addTestProvider
         env.call_method(
             &lm,
             "addTestProvider",
@@ -85,8 +88,8 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
                 JValue::Bool(1), // supportsAltitude
                 JValue::Bool(1), // supportsSpeed
                 JValue::Bool(1), // supportsBearing
-                JValue::Int(1),  // powerRequirement (POWER_LOW)
-                JValue::Int(1),  // accuracy (ACCURACY_FINE)
+                JValue::Int(1),  // powerRequirement
+                JValue::Int(1),  // accuracy
             ],
         )
         .map_err(|e| format!("addTestProvider failed: {}", e))?;
@@ -97,9 +100,15 @@ pub fn start_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         use windows::Devices::Geolocation::Provider::GeolocationProvider;
-        let _ = GeolocationProvider::new().map_err(|e: windows::core::Error| {
-            format!("Failed to access GeolocationProvider: {}", e)
-        })?;
+        let state = _app.state::<WindowsMockState>();
+        let mut provider_guard = state.provider.lock().map_err(|e| e.to_string())?;
+        
+        if provider_guard.is_none() {
+            let provider = GeolocationProvider::new().map_err(|e: windows::core::Error| {
+                format!("Failed to access GeolocationProvider: {}. Ensure Location is enabled in Windows Privacy Settings.", e)
+            })?;
+            *provider_guard = Some(provider);
+        }
     }
     Ok(())
 }
@@ -109,11 +118,13 @@ pub fn update_os_mock<R: Runtime>(
     _app: &AppHandle<R>,
     lat: f64,
     lng: f64,
-    speed: f32,
-    bearing: f32,
+    _speed: f32,
+    _bearing: f32,
 ) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
+        let speed = _speed;
+        let bearing = _bearing;
         let jvm = unsafe { JavaVM::from_raw(ndk_context::android_context().vm() as *mut jni::sys::JavaVM) }
             .map_err(|e| e.to_string())?;
         let mut env = get_env(&jvm)?;
@@ -126,7 +137,6 @@ pub fn update_os_mock<R: Runtime>(
 
         let provider_name = env.new_string("gps").map_err(|e| e.to_string())?;
         
-        // Create Location object
         let location_class = env.find_class("android/location/Location").map_err(|e| e.to_string())?;
         let location = env.new_object(&location_class, "(Ljava/lang/String;)V", &[JValue::Object(provider_name.as_ref())])
             .map_err(|e| e.to_string())?;
@@ -141,14 +151,12 @@ pub fn update_os_mock<R: Runtime>(
         env.call_method(&location, "setSpeed", "(F)V", &[JValue::Float(speed)]).map_err(|e| e.to_string())?;
         env.call_method(&location, "setBearing", "(F)V", &[JValue::Float(bearing)]).map_err(|e| e.to_string())?;
 
-        // elapsedRealtimeNanos
         let system_clock_class = env.find_class("android/os/SystemClock").map_err(|e| e.to_string())?;
         let elapsed_nanos = env.call_static_method(&system_clock_class, "elapsedRealtimeNanos", "()J", &[])
             .map_err(|e| e.to_string())?
             .j().map_err(|e| e.to_string())?;
         env.call_method(&location, "setElapsedRealtimeNanos", "(J)V", &[JValue::Long(elapsed_nanos)]).map_err(|e| e.to_string())?;
 
-        // setTestProviderLocation
         env.call_method(&lm, "setTestProviderLocation", "(Ljava/lang/String;Landroid/location/Location;)V", &[
             JValue::Object(provider_name.as_ref()),
             JValue::Object(&location),
@@ -157,21 +165,15 @@ pub fn update_os_mock<R: Runtime>(
     }
     #[cfg(target_os = "windows")]
     {
-        use windows::Devices::Geolocation::Provider::GeolocationProvider;
         use windows::Devices::Geolocation::{BasicGeoposition, PositionSource};
+        let state = _app.state::<WindowsMockState>();
+        let provider_guard = state.provider.lock().map_err(|e| e.to_string())?;
 
-        let provider = GeolocationProvider::new()
-            .map_err(|e: windows::core::Error| format!("Failed to get provider: {}", e))?;
-
-        let position = BasicGeoposition {
-            Latitude: lat,
-            Longitude: lng,
-            Altitude: 0.0,
-        };
-
-        provider
-            .SetOverridePosition(position, PositionSource::Unknown, 10.0)
-            .map_err(|e: windows::core::Error| format!("Windows Mocking failed: {}", e))?;
+        if let Some(provider) = provider_guard.as_ref() {
+            let position = BasicGeoposition { Latitude: lat, Longitude: lng, Altitude: 0.0 };
+            provider.SetOverridePosition(position, PositionSource::Unknown, 10.0)
+                .map_err(|e| format!("Windows Mocking failed: {}", e))?;
+        }
     }
     Ok(())
 }
@@ -196,12 +198,12 @@ pub fn stop_os_mock<R: Runtime>(_app: &AppHandle<R>) -> Result<(), String> {
     }
     #[cfg(target_os = "windows")]
     {
-        use windows::Devices::Geolocation::Provider::GeolocationProvider;
-        let provider = GeolocationProvider::new()
-            .map_err(|e: windows::core::Error| format!("Failed to get provider: {}", e))?;
-        provider
-            .ClearOverridePosition()
-            .map_err(|e: windows::core::Error| e.to_string())?;
+        let state = _app.state::<WindowsMockState>();
+        let mut provider_guard = state.provider.lock().map_err(|e| e.to_string())?;
+        if let Some(provider) = provider_guard.as_ref() {
+            let _ = provider.ClearOverridePosition();
+        }
+        *provider_guard = None;
     }
     Ok(())
 }
@@ -246,9 +248,51 @@ fn is_mock_setting_enabled<R: Runtime>(_app: AppHandle<R>) -> Result<bool, Strin
         ]).map_err(|e| e.to_string())?.i().map_err(|e| e.to_string())?;
         Ok(result != 0)
     }
-    #[cfg(not(target_os = "android"))]
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Devices::Geolocation::Provider::GeolocationProvider;
+        use windows::Devices::Geolocation::{Geolocator, GeolocationAccessStatus};
+        
+        // 1. Force Register Application with Windows Location Service
+        // This causes the app to appear in the "Let desktop apps access your location" list.
+        let _ = Geolocator::new().and_then(|g| g.GetGeopositionAsync());
+
+        // 2. Probe: Try to create a provider session. 
+        if GeolocationProvider::new().is_ok() {
+            return Ok(true);
+        }
+
+        // 3. Fallback: Check specific access status
+        let status = Geolocator::RequestAccessAsync()
+            .map_err(|e| e.to_string())?
+            .get()
+            .map_err(|e| e.to_string())?;
+        
+        Ok(status == GeolocationAccessStatus::Allowed)
+    }
+    #[cfg(not(any(target_os = "android", target_os = "windows")))]
     {
         Ok(true)
+    }
+}
+
+#[tauri::command]
+fn open_location_settings<R: Runtime>(_app: AppHandle<R>) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::System::Launcher;
+        use windows::Foundation::Uri;
+        let uri = Uri::CreateUri(&windows::core::HSTRING::from("ms-settings:privacy-location"))
+            .map_err(|e| e.to_string())?;
+        let _ = Launcher::LaunchUriAsync(&uri)
+            .map_err(|e| e.to_string())?
+            .get()
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(())
     }
 }
 
@@ -259,7 +303,17 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             start_mock,
             update_mock_location,
             stop_mock,
-            is_mock_setting_enabled
+            is_mock_setting_enabled,
+            open_location_settings
         ])
+        .setup(|_app, _api| {
+            #[cfg(target_os = "windows")]
+            {
+                _app.manage(WindowsMockState {
+                    provider: std::sync::Mutex::new(None),
+                });
+            }
+            Ok(())
+        })
         .build()
 }
