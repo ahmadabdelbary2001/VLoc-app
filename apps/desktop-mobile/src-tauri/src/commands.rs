@@ -13,12 +13,12 @@ pub fn start_route(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     route: Route,
-    speed_kmh: f32,
+    speed_ms: f32,
     inaccuracy_meters: f32,
 ) -> Result<(), String> {
     let mut sim_lock = state.simulator.lock().map_err(|_| "Failed to lock simulator")?;
     
-    let mut sim = Simulator::new(route, speed_kmh, inaccuracy_meters).map_err(|e| e.to_string())?;
+    let mut sim = Simulator::new(route, speed_ms, inaccuracy_meters).map_err(|e| e.to_string())?;
     sim.start();
     
     // Start OS Mocking

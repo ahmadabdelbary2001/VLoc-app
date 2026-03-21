@@ -56,7 +56,7 @@ pub struct Route {
 pub struct SpoofingState {
     pub is_active: bool,
     pub current_location: Option<Coordinates>,
-    pub current_speed_kmh: f32,
+    pub current_speed_ms: f32,
     pub bearing: f32,
     pub remaining_distance_meters: Option<f64>,
     pub inaccuracy_meters: f32,
@@ -67,7 +67,7 @@ impl Default for SpoofingState {
         Self {
             is_active: false,
             current_location: None,
-            current_speed_kmh: 0.0,
+            current_speed_ms: 0.0,
             bearing: 0.0,
             remaining_distance_meters: None,
             inaccuracy_meters: 0.0,
@@ -124,7 +124,7 @@ mod tests {
         let state = SpoofingState::default();
         assert_eq!(state.is_active, false);
         assert_eq!(state.current_location, None);
-        assert_eq!(state.current_speed_kmh, 0.0);
+        assert_eq!(state.current_speed_ms, 0.0);
         assert_eq!(state.remaining_distance_meters, None);
         assert_eq!(state.inaccuracy_meters, 0.0);
     }

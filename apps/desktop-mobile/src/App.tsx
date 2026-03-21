@@ -59,7 +59,7 @@ function App() {
           if (!isActive) {
             if (waypoints.length === 1) {
               // Static Mode: Start immediately with defaults
-              start({ speed: 10, inaccuracy: 0, loopMode: "stop" });
+              start({ speed: 1.4, inaccuracy: 0, loopMode: "stop" });
             } else {
               // Moving Mode: Show settings
               setIsModalOpen(true);

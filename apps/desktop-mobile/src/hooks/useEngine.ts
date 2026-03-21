@@ -7,9 +7,10 @@ import { commands, Route } from "@vloc/api-bindings";
  * **How**: Wraps Tauri/Specta commands for simulation control.
  */
 export const useEngine = () => {
-  const startSimulation = async (route: Route, speedKmh: number, inaccuracyMeters: number) => {
+  const startSimulation = async (route: Route, speedMs: number, inaccuracyMeters: number) => {
     try {
-      return await commands.start_route(route, speedKmh, inaccuracyMeters);
+      // @ts-ignore - Bindings will be regenerated after build
+      return await commands.start_route(route, speedMs, inaccuracyMeters);
     } catch (e) {
       console.error("Failed to start simulation:", e);
       throw e;

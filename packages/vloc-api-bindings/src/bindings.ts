@@ -19,7 +19,7 @@ export type EndOfRouteBehavior = "stop" | "restart" | "reverse"
  * 
  * **Why**: This is the primary data structure synced between Rust and the React UI.
  */
-export type SpoofingState = { is_active: boolean; current_location: Coordinates | null; current_speed_kmh: number; remaining_distance_meters: number | null; inaccuracy_meters: number }
+export type SpoofingState = { is_active: boolean; current_location: Coordinates | null; current_speed_ms: number; remaining_distance_meters: number | null; inaccuracy_meters: number }
 /**
  * Core domain errors for the VLoc simulation engine.
  * 
@@ -51,8 +51,8 @@ import { invoke } from "@tauri-apps/api/core";
  */
 export const commands = {
   /** Starts the spoofing simulation. */
-  async start_route(route: Route, speed_kmh: number, inaccuracy_meters: number): Promise<void> {
-    return await invoke("start_route", { route, speedKmh: speed_kmh, inaccuracyMeters: inaccuracy_meters });
+  async start_route(route: Route, speed_ms: number, inaccuracy_meters: number): Promise<void> {
+    return await invoke("start_route", { route, speedMs: speed_ms, inaccuracyMeters: inaccuracy_meters });
   },
   /** Stops the active spoofing simulation. */
   async stop_route(): Promise<void> {

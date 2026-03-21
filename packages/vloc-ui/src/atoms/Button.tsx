@@ -31,7 +31,7 @@ export const Button = ({
 			"bg-[#6ECFAA] text-[#0F3024] hover:bg-[#3A9E78] hover:text-white opacity-100 shadow-lg shadow-[#6ECFAA]/50 border-none",
 		success:
 			"bg-[#6ECFAA] text-[#0F3024] hover:bg-[#3A9E78] hover:text-white opacity-100 shadow-lg shadow-[#6ECFAA]/60 border-none",
-		secondary: "bg-muted text-foreground hover:bg-muted/80",
+		secondary: "bg-[#F5E9A0] text-[#0F3024] hover:bg-[#C8B94A] hover:text-white opacity-100 shadow-lg shadow-[#F5E9A0]/50 border-none",
 		ghost: "hover:bg-transparent text-foreground hover:bg-muted/50",
 		danger: "bg-rose-600 text-white hover:bg-rose-700 opacity-100 shadow-lg shadow-rose-500/40 border-none",
 		glass:

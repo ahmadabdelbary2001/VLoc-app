@@ -34,22 +34,24 @@ export const RouteSettingsModal = ({
 	isOpen,
 	onClose,
 	onPlay,
-	initialSpeed = 15,
+	initialSpeed = 2.25,
 }: RouteSettingsModalProps) => {
 	const [speed, setSpeed] = useState(initialSpeed);
 	const [inaccuracy, setInaccuracy] = useState(0);
 	const [loopMode, setLoopMode] = useState("stop");
-	const [activePreset, setActivePreset] = useState<"walk" | "bike" | "drive">(
-		"bike",
-	);
+	const [transportMode, setTransportMode] = useState<
+		"foot" | "bike" | "drive"
+	>("foot");
 
 	if (!isOpen) return null;
 
-	const handlePresetChange = (mode: "walk" | "bike" | "drive") => {
-		setActivePreset(mode);
-		if (mode === "walk") setSpeed(5);
-		if (mode === "bike") setSpeed(15);
-		if (mode === "drive") setSpeed(60);
+	const handleTransportModeChange = (
+		mode: "foot" | "bike" | "drive",
+	) => {
+		setTransportMode(mode);
+		if (mode === "foot") setSpeed(2.25); // Jog center
+		if (mode === "bike") setSpeed(15.0);
+		if (mode === "drive") setSpeed(30.0);
 	};
 
 	return (
@@ -83,14 +85,17 @@ export const RouteSettingsModal = ({
 					{/* Speed Section */}
 					<div className="space-y-6">
 						<SpeedPresetSelector
-							activeMode={activePreset}
-							onModeChange={handlePresetChange}
+							transportMode={transportMode}
+							speed={speed}
+							onTransportModeChange={handleTransportModeChange}
+							onSpeedSet={setSpeed}
 						/>
 						<Slider
 							label="Simulation Speed"
-							valueDisplay={`${speed} km/h`}
-							min={1}
-							max={120}
+							valueDisplay={`${speed.toFixed(1)} m/s`}
+							min={0.1}
+							max={transportMode === "foot" ? 12 : 120}
+							step={0.1}
 							value={speed}
 							onChange={(e) => setSpeed(Number(e.target.value))}
 						/>
@@ -139,7 +144,7 @@ export const RouteSettingsModal = ({
 				{/* Footer */}
 				<div className="p-6 bg-muted/80 backdrop-blur-xl border-t border-border/50 flex gap-4">
 					<Button
-						variant="ghost"
+						variant="glass"
 						className="flex-1 text-muted-foreground font-bold hover:bg-background/50"
 						onClick={onClose}
 					>

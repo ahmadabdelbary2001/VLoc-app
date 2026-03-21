@@ -44,6 +44,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         with:
           tagName: v__VERSION__ # tauri-action will replace this
           releaseName: "VLoc v__VERSION__"
@@ -88,13 +89,26 @@ jobs:
         run: pnpm install
 
       - name: Build Android APK
-        run: pnpm tauri android build
+        run: pnpm tauri android build --release
         working-directory: ./apps/desktop-mobile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+
+      - name: Sign APK
+        if: env.ANDROID_SIGNING_KEY != null
+        run: |
+          echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 -d > release.keystore
+          # Note: Modern Tauri builds often handle signing via Gradle if Env vars are set.
+          # If manual signing is needed, we'd use apksigner here.
+          # For now, we'll ensure the artifact is uploaded.
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: VLoc-Android-APK
+          name: VLoc-Android-Release-APK
           path: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk

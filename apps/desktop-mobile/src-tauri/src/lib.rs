@@ -38,7 +38,7 @@ pub fn run() {
                                 &app_handle,
                                 coord.lat,
                                 coord.lng,
-                                state.current_speed_kmh / 3.6, // Convert km/h to m/s
+                                state.current_speed_ms,
                                 state.bearing,
                             );
                         }

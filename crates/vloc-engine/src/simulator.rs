@@ -23,8 +23,8 @@ impl Simulator {
     /// **How**: Checks if the speed is positive and the route contains enough points
     /// to form at least one segment. It also initializes the `true_location` separately
     /// from the `SpoofingState`.
-    pub fn new(route: Route, initial_speed_kmh: f32, inaccuracy_meters: f32) -> EngineResult<Self> {
-        if initial_speed_kmh <= 0.0 {
+    pub fn new(route: Route, initial_speed_ms: f32, inaccuracy_meters: f32) -> EngineResult<Self> {
+        if initial_speed_ms <= 0.0 {
             return Err(EngineError::InvalidSpeed);
         }
 
@@ -39,7 +39,7 @@ impl Simulator {
             state: SpoofingState {
                 is_active: false,
                 current_location,
-                current_speed_kmh: initial_speed_kmh,
+                current_speed_ms: initial_speed_ms,
                 bearing: 0.0,
                 remaining_distance_meters: None,
                 inaccuracy_meters,
@@ -62,11 +62,11 @@ impl Simulator {
         &self.state
     }
 
-    pub fn set_speed(&mut self, speed_kmh: f32) -> EngineResult<()> {
-        if speed_kmh <= 0.0 {
+    pub fn set_speed(&mut self, speed_ms: f32) -> EngineResult<()> {
+        if speed_ms <= 0.0 {
             return Err(EngineError::InvalidSpeed);
         }
-        self.state.current_speed_kmh = speed_kmh;
+        self.state.current_speed_ms = speed_ms;
         Ok(())
     }
 
@@ -100,7 +100,7 @@ impl Simulator {
         }
 
         let mut distance_travel_m =
-            (self.state.current_speed_kmh as f64 * 1000.0 / 3600.0) * delta_seconds;
+            (self.state.current_speed_ms as f64) * delta_seconds;
 
         while distance_travel_m > 0.0 {
             // Determine the next target waypoint based on direction
@@ -178,9 +178,9 @@ mod tests {
     #[test]
     fn test_simulator_initialization() {
         let route = create_test_route();
-        let sim = Simulator::new(route, 60.0, 0.0).unwrap();
+        let sim = Simulator::new(route, 16.666, 0.0).unwrap();
 
-        assert_eq!(sim.get_state().current_speed_kmh, 60.0);
+        assert_eq!(sim.get_state().current_speed_ms, 16.666);
         assert!(!sim.get_state().is_active);
     }
 
@@ -194,8 +194,8 @@ mod tests {
     #[test]
     fn test_tick_advancement() {
         let route = create_test_route();
-        // 3600 km/h = 1000 m/s
-        let mut sim = Simulator::new(route, 3600.0, 0.0).unwrap();
+        // 1000 m/s
+        let mut sim = Simulator::new(route, 1000.0, 0.0).unwrap();
         sim.start();
 
         let loc = sim.tick(1.0).unwrap();
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn test_route_stop_behavior() {
         let route = create_test_route();
-        // 500k km/h to reach end in one tick
+        // 500k m/s to reach end in one tick
         let mut sim = Simulator::new(route, 500_000.0, 0.0).unwrap();
         sim.start();
 
@@ -222,13 +222,10 @@ mod tests {
         let mut route = create_test_route();
         route.end_behavior = EndOfRouteBehavior::Restart;
 
-        // Use a speed that finishes exactly more than one leg but less than two
-        // 111.2km * 1.5 = ~166km. 166km/h = ~46m/s.
-        let mut sim = Simulator::new(route, 600_000.0, 0.0).unwrap();
+        let mut sim = Simulator::new(route, 166_000.0, 0.0).unwrap();
         sim.start();
 
-        // 600k km/h = ~166km in 1s. This is 1.5 legs.
-        // Leg 1: 0->1 (111km). Restart. Leg 2: 0 -> 0.5 (~55km).
+        // 166k m/s = 1.5 legs approx.
         let loc = sim.tick(1.0).unwrap();
         assert!(loc.lng > 0.0 && loc.lng < 1.0);
         assert!(sim.get_state().is_active);
@@ -239,11 +236,9 @@ mod tests {
         let mut route = create_test_route();
         route.end_behavior = EndOfRouteBehavior::Reverse;
 
-        let mut sim = Simulator::new(route, 600_000.0, 0.0).unwrap();
+        let mut sim = Simulator::new(route, 166_000.0, 0.0).unwrap();
         sim.start();
 
-        // 600k km/h = ~166km in 1s. 1.5 legs.
-        // Leg 1: 0->1 (111km). Reverse. Leg 2 (reversing): 1 -> 0.5 (~55km).
         let loc = sim.tick(1.0).unwrap();
         assert!(sim.is_reversing);
         assert!(loc.lng < 1.0 && loc.lng > 0.0);
@@ -259,7 +254,7 @@ mod tests {
             waypoints: vec![Coordinates::new(0.0, 0.0).unwrap()],
             end_behavior: EndOfRouteBehavior::Stop,
         };
-        let mut sim = Simulator::new(route, 60.0, 0.0).unwrap();
+        let mut sim = Simulator::new(route, 15.0, 0.0).unwrap();
         sim.start();
 
         // Tick multiple times
@@ -274,11 +269,11 @@ mod tests {
     #[test]
     fn test_jitter_application() {
         let route = create_test_route();
-        let mut sim = Simulator::new(route, 60.0, 2000.0).unwrap(); // 2km jitter
+        let mut sim = Simulator::new(route, 15.0, 2000.0).unwrap(); // 2km jitter
         sim.start();
 
         let loc = sim.tick(1.0).unwrap();
-        // Since we only moved ~16 meters with the speed but have a 2km jitter,
+        // Since we only moved ~15 meters with the speed but have a 2km jitter,
         // the coordinate must differ noticeably from the path line.
         assert!(loc.lat != 0.0 || loc.lng != 0.0);
     }
