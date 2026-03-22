@@ -42,6 +42,9 @@ export const RouteSettingsModal = ({
 	const [transportMode, setTransportMode] = useState<
 		"foot" | "bike" | "drive"
 	>("foot");
+	const [bikeType, setBikeType] = useState<
+		"bicycle" | "ebike" | "motorcycle"
+	>("bicycle");
 
 	if (!isOpen) return null;
 
@@ -50,7 +53,7 @@ export const RouteSettingsModal = ({
 	) => {
 		setTransportMode(mode);
 		if (mode === "foot") setSpeed(2.25); // Jog center
-		if (mode === "bike") setSpeed(15.0);
+		if (mode === "bike") setSpeed(12.5); // Bicycle center
 		if (mode === "drive") setSpeed(30.0);
 	};
 
@@ -87,14 +90,23 @@ export const RouteSettingsModal = ({
 						<SpeedPresetSelector
 							transportMode={transportMode}
 							speed={speed}
+							bikeType={bikeType}
 							onTransportModeChange={handleTransportModeChange}
 							onSpeedSet={setSpeed}
+							onBikeTypeChange={setBikeType}
 						/>
 						<Slider
 							label="Simulation Speed"
 							valueDisplay={`${speed.toFixed(1)} m/s`}
 							min={0.1}
-							max={transportMode === "foot" ? 12 : 120}
+							max={
+								transportMode === "foot" ? 12 :
+								transportMode === "bike" ? (
+									bikeType === "bicycle" ? 25 :
+									bikeType === "ebike" ? 32 :
+									40 // motorcycle
+								) : 120 // drive
+							}
 							step={0.1}
 							value={speed}
 							onChange={(e) => setSpeed(Number(e.target.value))}
