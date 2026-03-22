@@ -18,6 +18,7 @@ interface RouteSettingsModalProps {
 		speed: number;
 		inaccuracy: number;
 		loopMode: string;
+		transportMode: "foot" | "bike" | "drive";
 	}) => void;
 	initialSpeed?: number;
 }
@@ -200,7 +201,7 @@ export const RouteSettingsModal = ({
 					<Button
 					variant="success"
 					className="flex-1 gap-2 shadow-2xl shadow-[#6ECFAA]/50 border-2 border-white/20 hover:scale-[1.02] active:scale-95 transition-all opacity-100"
-					onClick={() => onPlay({ speed, inaccuracy, loopMode })}
+					onClick={() => onPlay({ speed, inaccuracy, loopMode, transportMode })}
 				>
 					<Play className="w-4 h-4 fill-current" />
 					<span className="font-bold tracking-tight">Launch Simulation</span>

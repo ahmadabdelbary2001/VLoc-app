@@ -59,7 +59,7 @@ function App() {
           if (!isActive) {
             if (waypoints.length === 1) {
               // Static Mode: Start immediately with defaults
-              start({ speed: 1.4, inaccuracy: 0, loopMode: "stop" });
+              start({ speed: 1.4, inaccuracy: 0, loopMode: "stop", transportMode: "foot" });
             } else {
               // Moving Mode: Show settings
               setIsModalOpen(true);
@@ -94,7 +94,7 @@ function App() {
       <RouteSettingsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onPlay={(settings: { speed: number; inaccuracy: number; loopMode: string }) => {
+        onPlay={(settings: { speed: number; inaccuracy: number; loopMode: string; transportMode: "foot" | "bike" | "drive" }) => {
           start(settings);
           setIsModalOpen(false);
         }}

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { useMap } from "../../providers/MapProvider";
 import { useSimulation } from "../../providers/SimulationProvider";
+import { FaWalking, FaRunning, FaBicycle } from "react-icons/fa";
+import { IoCarSport } from "react-icons/io5";
 
 interface GoogleMapProps {
   center?: google.maps.LatLngLiteral;
@@ -57,7 +60,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
-  const { waypoints, currentLocation, realLocation, isActive } = useSimulation();
+  const { waypoints, currentLocation, realLocation, isActive, transportMode, speed } = useSimulation();
 
   // Initialize Map
   useEffect(() => {
@@ -124,14 +127,34 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       }
       
       if (isMoving) {
-        // Moving Spoof: Blue Arrow (Directional)
+        // Moving Spoof: Dynamic SVG Icon matching Transport Mode
+        let IconComp: any = FaWalking;
+        let color = "#3b82f6"; // Blue default
+
+        if (transportMode === "foot") {
+          color = "#3b82f6"; // Primary Blue
+          IconComp = speed >= 2.8 ? FaRunning : FaWalking;
+        } else if (transportMode === "bike") {
+          color = "#10b981"; // Success/Mint Green
+          IconComp = FaBicycle;
+        } else if (transportMode === "drive") {
+          color = "#f43f5e"; // Danger/Rose Red
+          IconComp = IoCarSport;
+        }
+
+        const svgString = renderToStaticMarkup(
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="16" fill={color} stroke="white" strokeWidth="2.5" />
+            <g transform="translate(6, 6)">
+              <IconComp size={24} color="white" />
+            </g>
+          </svg>
+        );
+
         return {
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 6,
-          fillColor: "#3b82f6",
-          fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: "white",
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`,
+          scaledSize: new google.maps.Size(36, 36),
+          anchor: new google.maps.Point(18, 18),
         };
       } else {
         // Static Spoof: Standard Green Pin

@@ -7,6 +7,8 @@ interface SimulationContextType {
   currentLocation: Coordinates | null;
   realLocation: Coordinates | null;
   waypoints: Array<{ lat: number; lng: number }>;
+  transportMode: "foot" | "bike" | "drive";
+  speed: number;
   addWaypoint: (lat: number, lng: number) => void;
   clearWaypoints: () => void;
   removeLastWaypoint: () => void;
@@ -21,6 +23,8 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [currentLocation, setCurrentLocation] = useState<Coordinates | null>(null);
   const [realLocation, setRealLocation] = useState<Coordinates | null>(null);
   const [waypoints, setWaypoints] = useState<Array<{ lat: number; lng: number }>>([]);
+  const [transportMode, setTransportMode] = useState<"foot" | "bike" | "drive">("foot");
+  const [speed, setSpeed] = useState<number>(1.4);
   const engine = useEngine();
 
   // 1. Polling loop to sync with the Rust engine (Spoofed Location)
@@ -80,6 +84,8 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     try {
       await engine.startSimulation(route, settings.speed, settings.inaccuracy || 0);
+      setTransportMode(settings.transportMode || "foot");
+      setSpeed(settings.speed);
       setIsActive(true);
     } catch (e) {
       console.error("Simulation start failed:", e);
@@ -102,6 +108,8 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         currentLocation,
         realLocation,
         waypoints, 
+        transportMode,
+        speed,
         addWaypoint, 
         clearWaypoints, 
         removeLastWaypoint,
