@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "VLoc",
-  "version": "1.0.0",
-  "identifier": "com.vloc.app",
+  "version": "1.1.2",
+  "identifier": "com.vloc.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1422",
@@ -25,7 +25,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "nsis", "appimage", "deb"],
+    "targets": "all",
     "publisher": "Ahmad Abdelbary",
     "resources": ["WebView2Loader.dll"],
     "icon": [

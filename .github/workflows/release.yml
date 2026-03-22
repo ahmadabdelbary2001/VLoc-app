@@ -33,7 +33,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install frontend dependencies
         run: pnpm install
@@ -85,7 +85,7 @@ jobs:
         run: pnpm install
 
       - name: Build Android APK
-        run: pnpm tauri android build --release
+        run: pnpm tauri android build
         working-directory: ./apps/desktop-mobile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
