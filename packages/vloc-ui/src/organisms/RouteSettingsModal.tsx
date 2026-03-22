@@ -37,6 +37,7 @@ export const RouteSettingsModal = ({
 	initialSpeed = 2.25,
 }: RouteSettingsModalProps) => {
 	const [speed, setSpeed] = useState(initialSpeed);
+	const [speedUnit, setSpeedUnit] = useState<"kmh" | "ms" | "mph">("kmh");
 	const [inaccuracy, setInaccuracy] = useState(0);
 	const [loopMode, setLoopMode] = useState("stop");
 	const [transportMode, setTransportMode] = useState<
@@ -53,6 +54,28 @@ export const RouteSettingsModal = ({
 		if (mode === "bike") setSpeed(10.0); // Bicycle center
 		if (mode === "drive") setSpeed(10.0); // City center
 	};
+
+	// Conversion helpers for UI display
+	const getConversionFactor = () => {
+		if (speedUnit === "kmh") return 3.6;
+		if (speedUnit === "mph") return 2.236936;
+		return 1.0;
+	};
+	const factor = getConversionFactor();
+	const displaySpeed = speed * factor;
+
+	const handleSpeedChange = (displayVal: number) => {
+		setSpeed(displayVal / factor);
+	};
+
+	const getModeMaxMs = () => {
+		if (transportMode === "foot") return 12;
+		if (transportMode === "bike") return 40;
+		return 120;
+	};
+	const maxDisplay = getModeMaxMs() * factor;
+	const displaySuffix = speedUnit === "kmh" ? "km/h" : speedUnit === "mph" ? "mph" : "m/s";
+
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
@@ -90,19 +113,39 @@ export const RouteSettingsModal = ({
 							onTransportModeChange={handleTransportModeChange}
 							onSpeedSet={setSpeed}
 						/>
-						<Slider
-							label="Simulation Speed"
-							valueDisplay={`${speed.toFixed(1)} m/s`}
-							min={0.1}
-							max={
-								transportMode === "foot" ? 12 :
-								transportMode === "bike" ? 40 : 
-								120 // drive
-							}
-							step={0.1}
-							value={speed}
-							onChange={(e) => setSpeed(Number(e.target.value))}
-						/>
+						<div>
+							<div className="flex justify-end mb-2">
+								<div className="flex bg-muted/30 p-1 rounded-xl border border-border/30">
+									{[
+										{ id: "kmh", label: "km/h" },
+										{ id: "ms", label: "m/s" },
+										{ id: "mph", label: "mph" },
+									].map((unit) => (
+										<button
+											key={unit.id}
+											onClick={() => setSpeedUnit(unit.id as any)}
+											className={cn(
+												"px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-300",
+												speedUnit === unit.id 
+													? "bg-primary text-primary-foreground shadow-sm" 
+													: "text-muted-foreground/70 hover:text-foreground"
+											)}
+										>
+											{unit.label}
+										</button>
+									))}
+								</div>
+							</div>
+							<Slider
+								label="Simulation Speed"
+								valueDisplay={`${displaySpeed.toFixed(1)} ${displaySuffix}`}
+								min={0.1}
+								max={maxDisplay}
+								step={0.1}
+								value={displaySpeed}
+								onChange={(e) => handleSpeedChange(Number(e.target.value))}
+							/>
+						</div>
 					</div>
 
 					{/* Inaccuracy Section */}
