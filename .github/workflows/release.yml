@@ -54,6 +54,8 @@ jobs:
           projectPath: ./apps/desktop-mobile
 
   android:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,12 +109,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: VLoc-Android-Release-APK
-          path: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          path: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          files: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
           draft: true
           prerelease: false
         env:
