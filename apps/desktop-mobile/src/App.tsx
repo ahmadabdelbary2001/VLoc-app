@@ -3,7 +3,7 @@ import {
   MapControlsOverlay, 
   RouteSettingsModal 
 } from "@vloc/ui";
-import { GoogleMap } from "./components/map/GoogleMap";
+import { MapLibreView } from "./components/map/MapLibreView";
 import { useSimulation } from "./providers/SimulationProvider";
 import { useMap } from "./providers/MapProvider";
 
@@ -33,8 +33,7 @@ function App() {
   // We only do this ONCE (using hasCentered) to avoid snapping back repeatedly.
   useEffect(() => {
     if (map && realLocation && !isActive && waypoints.length === 0 && !hasCentered) {
-      map.panTo({ lat: realLocation.lat, lng: realLocation.lng });
-      map.setZoom(15);
+      map.flyTo({ center: [realLocation.lng, realLocation.lat], zoom: 15, duration: 2000 });
       setHasCentered(true);
     }
   }, [map, realLocation, isActive, waypoints.length, hasCentered]);
@@ -43,7 +42,7 @@ function App() {
     <div className="h-screen w-screen bg-background transition-colors duration-300 overflow-hidden relative">
       {/* Real Map Surface */}
       <div className="absolute inset-0">
-        <GoogleMap 
+        <MapLibreView 
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
           onMapClick={(lat, lng) => !isActive && addWaypoint(lat, lng)}
@@ -81,8 +80,11 @@ function App() {
               ? { lat: realLocation.lat, lng: realLocation.lng }
               : DEFAULT_CENTER;
             
-            map.panTo(target);
-            map.setZoom((isActive || realLocation) ? 15 : DEFAULT_ZOOM);
+            map.flyTo({ 
+              center: [target.lng, target.lat], 
+              zoom: (isActive || realLocation) ? 16 : DEFAULT_ZOOM,
+              duration: 1500
+            });
           }
         }}
         onClear={clearWaypoints}

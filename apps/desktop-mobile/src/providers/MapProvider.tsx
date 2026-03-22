@@ -1,33 +1,24 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import type { MapRef } from "react-map-gl/maplibre";
 
 interface MapContextType {
-  map: google.maps.Map | null;
+  map: MapRef | null;
   isLoaded: boolean;
   loadError: Error | null;
   theme: "dark" | "light";
-  setMap: (map: google.maps.Map | null) => void;
+  setMap: (map: MapRef | null) => void;
   toggleTheme: () => void;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-// Global initialization to ensure it's only called once
-if (GOOGLE_MAPS_API_KEY) {
-  setOptions({
-    key: GOOGLE_MAPS_API_KEY,
-    v: "weekly",
-    libraries: ["geometry"],
-  });
-}
+export const VITE_MAPTILER_API_KEY = import.meta.env.VITE_MAPTILER_API_KEY || "demo";
 
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [map, setMap] = useState<MapRef | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [loadError, setLoadError] = useState<Error | null>(null);
+  const isLoaded = true;
+  const loadError = null;
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -42,19 +33,11 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [theme]);
 
+  // Load error handling
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      setLoadError(new Error("VITE_GOOGLE_MAPS_API_KEY is missing in .env"));
-      return;
+    if (VITE_MAPTILER_API_KEY === "demo") {
+      console.warn("VITE_MAPTILER_API_KEY is missing. Falling back to demo mode.");
     }
-
-    // Modern way to load Google Maps libraries
-    Promise.all([
-      importLibrary("maps"),
-      importLibrary("marker"),
-    ])
-      .then(() => setIsLoaded(true))
-      .catch((e: Error) => setLoadError(e));
   }, []);
 
   return (
