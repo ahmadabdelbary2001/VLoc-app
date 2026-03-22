@@ -44,8 +44,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         with:
-          tagName: v__VERSION__ # tauri-action will replace this
-          releaseName: "VLoc v__VERSION__"
+          tagName: ${{ github.ref_name }}
+          releaseName: "VLoc ${{ github.ref_name }}"
           releaseBody: "VLoc Official Release"
           releaseDraft: true
           prerelease: false
