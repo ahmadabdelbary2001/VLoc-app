@@ -103,8 +103,17 @@ jobs:
           # If manual signing is needed, we'd use apksigner here.
           # For now, we'll ensure the artifact is uploaded.
 
-      - name: Upload Android APK
+      - name: Upload Android APK to Action Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: VLoc-Android-Release-APK
           path: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/desktop-mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
