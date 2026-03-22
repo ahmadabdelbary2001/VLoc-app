@@ -1,7 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { Bike, Car, Footprints } from "lucide-react";
-import { FaMotorcycle, FaBicycle, FaWalking, FaRunning, FaRoute } from 'react-icons/fa';
+import { FaMotorcycle, FaBicycle, FaWalking, FaRunning, FaRoute, FaCarSide, FaCar, FaFlagCheckered } from 'react-icons/fa';
 import { MdElectricBike, MdDirectionsRun, MdSpeed } from 'react-icons/md';
+import { IoCarSport } from 'react-icons/io5';
 import { twMerge } from "tailwind-merge";
 import { Button } from "../atoms/Button";
 
@@ -11,15 +12,12 @@ function cn(...inputs: ClassValue[]) {
 
 export type TransportMode = "foot" | "bike" | "drive";
 export type GaitMode = "walk" | "jog" | "run" | "marathon" | "sprint";
-export type BikeType = "bicycle" | "ebike" | "motorcycle";
 
 interface SpeedPresetSelectorProps {
 	transportMode: TransportMode;
 	speed: number;
-	bikeType: BikeType;
 	onTransportModeChange: (mode: TransportMode) => void;
 	onSpeedSet: (speed: number) => void;
-	onBikeTypeChange: (type: BikeType) => void;
 	className?: string;
 }
 
@@ -32,9 +30,16 @@ const GAIT_CONFIG = [
 ] as const;
 
 const BIKE_CONFIG = [
-	{ id: "bicycle", icon: FaBicycle, maxSpeed: 25, center: 12.5, label: "Bicycle" },
-	{ id: "ebike", icon: MdElectricBike, maxSpeed: 32, center: 16.0, label: "E-Bike" },
-	{ id: "motorcycle", icon: FaMotorcycle, maxSpeed: 40, center: 20.0, label: "Motorcycle" },
+	{ id: "bicycle", icon: FaBicycle, range: [0, 15], center: 10, label: "Bicycle" },
+	{ id: "ebike", icon: MdElectricBike, range: [15, 25], center: 20, label: "E-Bike" },
+	{ id: "motorcycle", icon: FaMotorcycle, range: [25, 40], center: 32, label: "Motorcycle" },
+] as const;
+
+const DRIVE_CONFIG = [
+	{ id: "city", icon: FaCarSide, range: [0, 20], center: 10, label: "City" },
+	{ id: "highway", icon: FaCar, range: [20, 40], center: 30, label: "Highway" },
+	{ id: "sports", icon: IoCarSport, range: [40, 70], center: 55, label: "Sports" },
+	{ id: "racing", icon: FaFlagCheckered, range: [70, 120], center: 90, label: "Racing" },
 ] as const;
 
 /**
@@ -46,10 +51,8 @@ const BIKE_CONFIG = [
 export const SpeedPresetSelector = ({
 	transportMode,
 	speed,
-	bikeType,
 	onTransportModeChange,
 	onSpeedSet,
-	onBikeTypeChange,
 	className,
 }: SpeedPresetSelectorProps) => {
 
@@ -118,16 +121,12 @@ export const SpeedPresetSelector = ({
 				<div className="grid grid-cols-3 gap-2 animate-in slide-in-from-top-2 duration-300">
 					{BIKE_CONFIG.map((bike) => {
 						const Icon = bike.icon;
-						const isActive = bikeType === bike.id;
+						const isActive = (speed >= bike.range[0] && speed < bike.range[1]) || (bike.id === "motorcycle" && speed >= 40);
 						return (
 							<Button
 								key={bike.id}
 								variant={isActive ? "secondary" : "glass"}
-								onClick={() => {
-									onBikeTypeChange(bike.id as BikeType);
-									if (speed > bike.maxSpeed) onSpeedSet(bike.maxSpeed);
-									else onSpeedSet(bike.center);
-								}}
+								onClick={() => onSpeedSet(bike.center)}
 								className={cn(
 									"flex flex-col items-center gap-1.5 h-auto py-3 rounded-xl transition-all duration-300",
 									!isActive && "bg-muted/30 border-transparent opacity-70 hover:opacity-100",
@@ -136,6 +135,32 @@ export const SpeedPresetSelector = ({
 								<Icon className={cn("w-4 h-4", isActive ? "animate-pulse" : "")} />
 								<span className="text-[8px] font-black uppercase tracking-tight">
 									{bike.label}
+								</span>
+							</Button>
+						);
+					})}
+				</div>
+			)}
+
+			{/* Tier 2: Drive Types (Only shown if transportMode is 'drive') */}
+			{transportMode === "drive" && (
+				<div className="grid grid-cols-4 gap-2 animate-in slide-in-from-top-2 duration-300">
+					{DRIVE_CONFIG.map((drive) => {
+						const Icon = drive.icon;
+						const isActive = (speed >= drive.range[0] && speed < drive.range[1]) || (drive.id === "racing" && speed >= 120);
+						return (
+							<Button
+								key={drive.id}
+								variant={isActive ? "secondary" : "glass"}
+								onClick={() => onSpeedSet(drive.center)}
+								className={cn(
+									"flex flex-col items-center gap-1.5 h-auto py-3 rounded-xl transition-all duration-300",
+									!isActive && "bg-muted/30 border-transparent opacity-70 hover:opacity-100",
+								)}
+							>
+								<Icon className={cn("w-4 h-4", isActive ? "animate-pulse" : "")} />
+								<span className="text-[8px] font-black uppercase tracking-tight">
+									{drive.label}
 								</span>
 							</Button>
 						);
