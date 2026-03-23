@@ -7,6 +7,7 @@ import { FaWalking, FaRunning, FaBicycle } from "react-icons/fa";
 import { IoCarSport } from "react-icons/io5";
 import { MapStyleSelector } from "@vloc/ui";
 import type { MapStyleId } from "@vloc/ui";
+import { useRouting } from "../../hooks/useRouting";
 
 interface MapLibreViewProps {
   center?: { lat: number; lng: number };
@@ -49,29 +50,47 @@ export const MapLibreView: React.FC<MapLibreViewProps> = ({
   // Show/hide the style selector panel via a small toggle button.
   const [selectorOpen, setSelectorOpen] = useState(false);
 
+  // Fetch real road geometry from MapTiler Directions API.
+  const routeData = useRouting(waypoints, transportMode);
+
   const mapStyleUrl = useMemo(
     () => resolveStyleUrl(mapStyleId, VITE_MAPTILER_API_KEY),
     [mapStyleId]
   );
 
-  // Hardware-accelerated Vector route.
-  const routeGeoJSON = useMemo(() => {
-    if (waypoints.length < 2) return null;
+  // GeoJSON for the confirmed road route (shown once API responds).
+  const roadRouteGeoJSON = useMemo(() => {
+    if (!routeData || routeData.coordinates.length < 2) return null;
     return {
-      type: "FeatureCollection",
+      type: "FeatureCollection" as const,
       features: [{
-        type: "Feature",
-        geometry: {
-          type: "LineString",
-          coordinates: waypoints.map((w) => [w.lng, w.lat]),
-        },
+        type: "Feature" as const,
+        geometry: { type: "LineString" as const, coordinates: routeData.coordinates },
+        properties: {},
       }],
     };
-  }, [waypoints]);
+  }, [routeData]);
+
+  // Fallback straight-line GeoJSON: shown while route is loading (≥2 waypoints, no result yet).
+  const straightLineGeoJSON = useMemo(() => {
+    if (waypoints.length < 2 || routeData) return null;
+    return {
+      type: "FeatureCollection" as const,
+      features: [{
+        type: "Feature" as const,
+        geometry: {
+          type: "LineString" as const,
+          coordinates: waypoints.map((w) => [w.lng, w.lat] as [number, number]),
+        },
+        properties: {},
+      }],
+    };
+  }, [waypoints, routeData]);
 
   const loc = (isActive && currentLocation) ? currentLocation : realLocation;
   const isSpoofed = isActive && !!currentLocation;
   const isMoving = waypoints.length > 1;
+  const isLoadingRoute = waypoints.length >= 2 && !routeData && VITE_MAPTILER_API_KEY !== "demo";
 
   // Dynamic Camera Pitching Feature (Navigator Mode).
   useEffect(() => {
@@ -123,16 +142,34 @@ export const MapLibreView: React.FC<MapLibreViewProps> = ({
           </Source>
         )}
 
-        {/* Route Rendered on Top */}
-        {routeGeoJSON && (
-          <Source id="route-source" type="geojson" data={routeGeoJSON as any}>
+        {/* Real road route — shown once API returns geometry */}
+        {roadRouteGeoJSON && (
+          <Source id="road-route-source" type="geojson" data={roadRouteGeoJSON}>
             <Layer
-              id="route-layer"
+              id="road-route-layer"
               type="line"
+              layout={{ "line-cap": "round", "line-join": "round" }}
               paint={{
                 "line-color": "#3b82f6",
                 "line-width": 5,
-                "line-opacity": 0.8,
+                "line-opacity": 0.85,
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Dashed fallback — visible only while the API call is in-flight */}
+        {straightLineGeoJSON && (
+          <Source id="fallback-route-source" type="geojson" data={straightLineGeoJSON}>
+            <Layer
+              id="fallback-route-layer"
+              type="line"
+              layout={{ "line-cap": "round", "line-join": "round" }}
+              paint={{
+                "line-color": "#93c5fd",
+                "line-width": 3,
+                "line-opacity": 0.6,
+                "line-dasharray": [3, 3],
               }}
             />
           </Source>
@@ -180,7 +217,7 @@ export const MapLibreView: React.FC<MapLibreViewProps> = ({
           type="button"
           aria-label="Toggle map style selector"
           onClick={() => setSelectorOpen((v) => !v)}
-          className="w-10 h-10 rounded-full bg-white/60 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          className={`w-10 h-10 rounded-full bg-white/60 dark:bg-black/50 backdrop-blur-md border shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${isLoadingRoute ? "border-blue-400 animate-pulse" : "border-white/20 dark:border-white/10"}`}
         >
           <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-foreground" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503-10.498l4.875 2.437c.381.19.622.58.622.998v8.25a1.125 1.125 0 01-1.496 1.066L13 21m0-13.5L9 9m4.5-1.5L7.128 4.815A1.125 1.125 0 006 5.877v8.25m0 0l-3.129 1.562A1.125 1.125 0 001.5 16.716V8.467c0-.418.241-.808.622-.997L6 5.877" />

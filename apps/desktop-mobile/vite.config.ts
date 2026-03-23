@@ -30,7 +30,16 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
-    target: process.env.TAURI_ENV_PLATFORM == 'windows' ? 'chrome105' : 'safari13',
+    // Minimum targets that support BigInt literals across all platforms:
+    //   - Chrome  67+ (Windows, Linux, Android WebView)
+    //   - Safari 14+  (macOS, iOS)
+    // 'safari13' was the culprit — BigInt only landed in Safari 14.
+    target: (() => {
+      const platform = process.env.TAURI_ENV_PLATFORM;
+      if (platform === 'android' || platform === 'ios') return 'chrome114';
+      if (platform === 'macos')                          return 'safari16';
+      return 'chrome105'; // windows, linux, default
+    })(),
     minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },

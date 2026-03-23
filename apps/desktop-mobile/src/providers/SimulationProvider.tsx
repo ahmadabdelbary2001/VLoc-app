@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { useEngine } from "../hooks/useEngine";
 import { Coordinates } from "@vloc/api-bindings";
+import { getRoadRoute } from "../hooks/useRouting";
 
 interface SimulationContextType {
   isActive: boolean;
@@ -76,15 +77,28 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const start = useCallback(async (settings: any) => {
     if (waypoints.length < 1) return;
     
+    const mode = settings.transportMode || "foot";
+
+    // FETCH FULL REAL-ROAD GEOMETRY FOR THE CHOSEN TRANSPORT MODE
+    // We do this right before starting the engine so we get the exact 
+    // real-road path (e.g., walking paths vs driving streets) for the simulation.
+    const routeGeom = await getRoadRoute(waypoints, mode);
+    
+    // If we successfully fetched a road geometry, use its hundreds of coordinate points.
+    // Otherwise (or if only 1 waypoint), fall back to the straight-line user waypoints.
+    const finalPoints = routeGeom && routeGeom.coordinates.length > 0
+      ? routeGeom.coordinates.map((coord: [number, number]) => ({ lat: coord[1], lng: coord[0], altitude: null }))
+      : waypoints.map(w => ({ lat: w.lat, lng: w.lng, altitude: null }));
+
     // Construct the Route object expected by Rust
     const route = {
-      waypoints: waypoints.map(w => ({ lat: w.lat, lng: w.lng, altitude: null })),
+      waypoints: finalPoints,
       end_behavior: settings.loopMode || "stop",
     };
 
     try {
       await engine.startSimulation(route, settings.speed, settings.inaccuracy || 0);
-      setTransportMode(settings.transportMode || "foot");
+      setTransportMode(mode);
       setSpeed(settings.speed);
       setIsActive(true);
     } catch (e) {
